@@ -1,0 +1,112 @@
+{
+  "project": "ML-Based Sugarcane Irrigation Requirement Prediction System for India",
+  "target_definition": "Formula-derived simulated daily irrigation-deficit proxy; not field-measured irrigation requirement.",
+  "dataset_rows": 71214,
+  "dataset_columns": 47,
+  "location_column": "location_id",
+  "unique_locations": 39,
+  "feature_order": [
+    "latitude",
+    "longitude",
+    "temperature_mean_c",
+    "temperature_max_c",
+    "temperature_min_c",
+    "relative_humidity_percent",
+    "precipitation_mm_day",
+    "wind_speed_m_s",
+    "solar_radiation_kwh_m2_day",
+    "sin_day_of_year",
+    "cos_day_of_year"
+  ],
+  "target_column": "irrigation_requirement_mm",
+  "split": {
+    "random_state": 42,
+    "train_rows": 56606,
+    "test_rows": 14608,
+    "train_locations": [
+      "BR01",
+      "BR02",
+      "BR03",
+      "GJ01",
+      "GJ03",
+      "HR01",
+      "HR02",
+      "HR03",
+      "KA01",
+      "KA02",
+      "KA03",
+      "KA05",
+      "MH01",
+      "MH02",
+      "MH03",
+      "MH04",
+      "MH05",
+      "MH06",
+      "MH07",
+      "PB01",
+      "PB02",
+      "PB03",
+      "TN01",
+      "TN04",
+      "TS01",
+      "UP01",
+      "UP02",
+      "UP04",
+      "UP05",
+      "UP07",
+      "UP08"
+    ],
+    "held_out_locations": [
+      "GJ02",
+      "GJ04",
+      "KA04",
+      "TN02",
+      "TN03",
+      "TS02",
+      "UP03",
+      "UP06"
+    ],
+    "note": "New location-held-out split; may differ from original split."
+  },
+  "new_split_metrics": [
+    {
+      "model": "Random Forest",
+      "split": "train",
+      "n": 56606,
+      "MAE_mm_day": 0.10564346491069736,
+      "RMSE_mm_day": 0.16257040451773713,
+      "R2": 0.9992995379375051
+    },
+    {
+      "model": "Random Forest",
+      "split": "held_out_locations",
+      "n": 14608,
+      "MAE_mm_day": 0.21555299285812765,
+      "RMSE_mm_day": 0.3197414654441963,
+      "R2": 0.9970573735974004
+    },
+    {
+      "model": "XGBoost",
+      "split": "train",
+      "n": 56606,
+      "MAE_mm_day": 0.17582635473525335,
+      "RMSE_mm_day": 0.22946756742982957,
+      "R2": 0.9986044536367965
+    },
+    {
+      "model": "XGBoost",
+      "split": "held_out_locations",
+      "n": 14608,
+      "MAE_mm_day": 0.22495877364721428,
+      "RMSE_mm_day": 0.2938888222194079,
+      "R2": 0.9975139873055203
+    }
+  ],
+  "limitations": [
+    "This location-held-out split may differ from the original saved split.",
+    "Metrics measure reproduction of the formula-derived proxy target.",
+    "No independent field-measured irrigation validation is included.",
+    "PCA, feature ablation, sensitivity, and K-Means are experimental only.",
+    "K-Means clusters are not validated agronomic categories."
+  ]
+}

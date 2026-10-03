@@ -1,0 +1,23 @@
+model,feature,mean_absolute_shap_value
+Random Forest,latitude,0.18245459259026234
+Random Forest,longitude,0.029437409854892044
+Random Forest,temperature_mean_c,0.014102095535560653
+Random Forest,temperature_max_c,3.1823248452296267
+Random Forest,temperature_min_c,0.3306377170187445
+Random Forest,relative_humidity_percent,0.11388199606777884
+Random Forest,precipitation_mm_day,2.7550077163992897
+Random Forest,wind_speed_m_s,0.008268534697983325
+Random Forest,solar_radiation_kwh_m2_day,0.3270205695978577
+Random Forest,sin_day_of_year,0.24101288756314673
+Random Forest,cos_day_of_year,0.30909595497968007
+XGBoost,latitude,0.23391000926494598
+XGBoost,longitude,0.04291490092873573
+XGBoost,temperature_mean_c,0.14234940707683563
+XGBoost,temperature_max_c,2.7562315464019775
+XGBoost,temperature_min_c,0.6246693730354309
+XGBoost,relative_humidity_percent,0.2414049506187439
+XGBoost,precipitation_mm_day,2.5897769927978516
+XGBoost,wind_speed_m_s,0.01466404926031828
+XGBoost,solar_radiation_kwh_m2_day,0.40489745140075684
+XGBoost,sin_day_of_year,0.23361343145370483
+XGBoost,cos_day_of_year,0.6532670259475708

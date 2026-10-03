@@ -1,0 +1,141 @@
+# ==============================================================================
+# .gitignore for ML-Based Sugarcane Irrigation Requirement Prediction System
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Python, Bytecode & Packaging
+# ------------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# Testing & Linting Caches
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+dmypy.json
+
+# ------------------------------------------------------------------------------
+# 2. Node.js, Frontend & Vite
+# ------------------------------------------------------------------------------
+node_modules/
+frontend/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Production Build Output (compiled artifacts)
+frontend/dist/
+frontend/dist-ssr/
+*.local
+
+# Vite Caches
+.vite/
+frontend/.vite/
+
+# ------------------------------------------------------------------------------
+# 3. Environment Variables & Credentials
+# ------------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+*.pem
+*.key
+*.crt
+*.pfx
+secrets/
+
+# ------------------------------------------------------------------------------
+# 4. OS & IDE Metadata
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# JetBrains (PyCharm / WebStorm)
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Visual Studio Code (preserve shared extensions.json if any, ignore user state)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.sublime-workspace
+*.sublime-project
+
+# ------------------------------------------------------------------------------
+# 5. Notebook Checkpoints & Temporary Artifacts
+# ------------------------------------------------------------------------------
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+*.ipynb_checkpoints
+.cache/
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# ------------------------------------------------------------------------------
+# 6. Runtime Logs
+# ------------------------------------------------------------------------------
+logs/*
+!logs/.gitkeep
+*.log
+
+# ------------------------------------------------------------------------------
+# 7. Preserved Project Artifacts Notice
+# ------------------------------------------------------------------------------
+# The following essential assets are explicitly tracked and MUST NOT be ignored:
+# - Models/random_forest.joblib (Trained production Random Forest model)
+# - Models/xgboost.joblib (Trained production XGBoost model)
+# - sugarcane_ml_experiments_results/ (Verified experiment tables and plots)
+# - frontend/src/ (React components, contexts, and typed experiment datasets)
+# - data/soilgrids/.gitkeep (SoilGrids offline cache placeholder)

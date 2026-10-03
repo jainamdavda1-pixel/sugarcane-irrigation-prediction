@@ -1,0 +1,23 @@
+model,feature,importance
+Random Forest,latitude,0.004350803238770531
+Random Forest,longitude,0.0007830077181942348
+Random Forest,temperature_mean_c,0.0005335300081047764
+Random Forest,temperature_max_c,0.6362804787828942
+Random Forest,temperature_min_c,0.008395467288624557
+Random Forest,relative_humidity_percent,0.0038191814420473697
+Random Forest,precipitation_mm_day,0.32010005647223166
+Random Forest,wind_speed_m_s,0.0005084111479721136
+Random Forest,solar_radiation_kwh_m2_day,0.01391852416423724
+Random Forest,sin_day_of_year,0.007242222326932681
+Random Forest,cos_day_of_year,0.004068317409990768
+XGBoost,latitude,0.006612418219447136
+XGBoost,longitude,0.0034952769055962563
+XGBoost,temperature_mean_c,0.046342238783836365
+XGBoost,temperature_max_c,0.42785876989364624
+XGBoost,temperature_min_c,0.013080023229122162
+XGBoost,relative_humidity_percent,0.04803362861275673
+XGBoost,precipitation_mm_day,0.3301011621952057
+XGBoost,wind_speed_m_s,0.0012220954522490501
+XGBoost,solar_radiation_kwh_m2_day,0.09094610065221786
+XGBoost,sin_day_of_year,0.021661216393113136
+XGBoost,cos_day_of_year,0.010647021234035492
