@@ -1,438 +1,800 @@
 # ML-Based Sugarcane Irrigation Requirement Prediction System for India
 
-<<<<<<< HEAD
-An integrated machine learning system for predicting a **simulated daily irrigation-deficit proxy (mm/day)** for sugarcane crops across India. This system eliminates manual weather parameter entry for farmers by automatically pulling real-time, forecast, and historical weather data via **Open-Meteo**, and querying high-resolution 250m surface soil properties via **OpenLandMap**.
-=======
-A full-stack experimental decision-support prototype that combines **Random Forest** and **XGBoost regression**, weather retrieval, optional soil context, and an ML Research Lab to estimate a daily irrigation-deficit proxy for a selected location and date.
->>>>>>> d3fc4ccb213c2e4ba1c51f6125d8a173087e77d3
+A full-stack **experimental machine-learning prototype** that combines
+weather data, two regression models, a Farmer Dashboard, and an ML
+Research Lab to estimate a **simulated daily irrigation-deficit proxy**
+for a selected location and date.
 
 
 
-<<<<<<< HEAD
-1. **Location Entry**: Farmers choose a location using GPS, location search (e.g., *Kolhapur, Meerut, Belagavi, Coimbatore*), or latitude/longitude coordinates.
-2. **Planting Date**: Farmers provide the sugarcane sowing/planting date to evaluate the crop stage and age.
-3. **Prediction Date**: Defaults to today (or any date within the 16-day forecast horizon or past historical records).
-4. **Automated Weather & Soil Fetching**:
-   - **Open-Meteo API**: Automatically fetches daily mean/min/max temperature, relative humidity, precipitation, wind speed, and shortwave solar radiation (converted from MJ/m² to kWh/m²/day).
-   - **OpenLandMap 250m Rasters**: Samples all-India surface soil pH, organic carbon (SOC), and clay fraction from GeoTIFF rasters with zero external network dependency.
-5. **Exact Feature Engineering**: Reconstructs the exact 11 training features including cyclical `sin_day_of_year` and `cos_day_of_year`.
-6. **Dual-Model Inference**: Evaluates the input using pre-trained **Random Forest Regressor** and **XGBoost Regressor** pipelines (`.joblib` models).
-7. **Interactive Dashboard**: Displays predictions, weather breakdown, soil properties, and experimental-estimate disclaimers.
-=======
+------------------------------------------------------------------------
+
 ## Contents
->>>>>>> d3fc4ccb213c2e4ba1c51f6125d8a173087e77d3
 
-- [Project overview](#project-overview)
-- [Current capabilities](#current-capabilities)
-- [System architecture](#system-architecture)
-- [Dataset and target construction](#dataset-and-target-construction)
-- [Machine-learning features](#machine-learning-features)
-- [Model evaluation results](#model-evaluation-results)
-- [Research experiments](#research-experiments)
-- [Data sources and integrations](#data-sources-and-integrations)
-- [Repository structure](#repository-structure)
-- [Setup and running locally](#setup-and-running-locally)
-- [API endpoints](#api-endpoints)
-- [Testing](#testing)
-- [Model files and Git LFS](#model-files-and-git-lfs)
-- [Known limitations and next steps](#known-limitations-and-next-steps)
+1.  [Project at a glance](#project-at-a-glance)
+2.  [What the application does](#what-the-application-does)
+3.  [System architecture](#system-architecture)
+4.  [Dataset and target construction](#dataset-and-target-construction)
+5.  [Why field area is not a model
+    input](#why-field-area-is-not-a-model-input)
+6.  [Model features](#model-features)
+7.  [Models and evaluation](#models-and-evaluation)
+8.  [ML Research Lab: concepts, results, and
+    interpretation](#ml-research-lab-concepts-results-and-interpretation)
+9.  [Data sources and soil context](#data-sources-and-soil-context)
+10. [Repository structure](#repository-structure)
+11. [Run locally](#run-locally)
+12. [API endpoints](#api-endpoints)
+13. [Testing and verification](#testing-and-verification)
+14. [Limitations and responsible use](#limitations-and-responsible-use)
+15. [Future work](#future-work)
+16. [References](#references)
 
-## Project overview
+------------------------------------------------------------------------
 
-The application is designed to demonstrate how a farmer-facing interface could collect a location and prediction date, retrieve weather data, prepare the feature vector expected by the trained models, and display estimates from two regressors. Planting date is collected to calculate crop age for display, but **planting date and crop age are not model inputs** in the current model version.
+## Project at a glance
 
-The project has two primary user experiences:
+  -----------------------------------------------------------------------
+  Item                                Description
+  ----------------------------------- -----------------------------------
+  Project title                       ML-Based Sugarcane Irrigation
+                                      Requirement Prediction System for
+                                      India
 
-1. **Farmer Dashboard** — location/date input, weather information, optional soil context, and predictions from both models.
-2. **ML Research Lab** — evaluation metrics and exploratory analyses such as feature importance, SHAP summaries, feature ablation, learning curves, PCA, sensitivity analysis, residuals, location-wise errors, and weather clustering.
+  Application type                    Full-stack research / educational
+                                      prototype
 
-## Current capabilities
+  Dataset summary                     71,214 daily location records, 39
+                                      candidate Indian locations, 47
+                                      columns
 
-- FastAPI backend with prediction, health, geocoding, weather, soil, and experiment-summary endpoints.
-- React + TypeScript + Vite frontend.
-- Random Forest and XGBoost model inference using a fixed 11-feature schema.
-- Open-Meteo weather/geocoding integration.
-- SoilGrids integration attempt with optional local-raster fallback; soil properties are supplementary context only.
-- Cached weather, geocoding, and soil responses.
-- Experiment summary tables and plot assets in the repository.
-- Automated pytest tests for API and service behavior.
+  Target                              Formula-generated daily net
+                                      irrigation-deficit proxy, in mm/day
 
-## System architecture
+  Model type                          Supervised regression
 
-The system is organized into four layers: **presentation**, **API and orchestration**, **data integrations**, and **ML inference / research assets**. The Farmer Dashboard and ML Research Lab are separate user experiences that share the same frontend and backend, but they serve different purposes.
+  Models                              Random Forest Regressor and XGBoost
+                                      Regressor
 
-### High-level system architecture
+  Model inputs                        11 weather, location, and seasonal
+                                      features
 
-The diagram below separates the **user experience**, **API orchestration**, **external data services**, **model inference**, and **research artifacts**. Solid arrows represent the main application flow; dashed arrows represent supplementary context or research data.
+  Frontend                            React, TypeScript, Vite
 
-```mermaid
-flowchart TB
-    USER([Farmer / Researcher])
+  Backend                             FastAPI
 
-    subgraph PRESENTATION["01 · PRESENTATION — React + TypeScript + Vite"]
-        direction LR
-        DASH["🌱 Farmer Dashboard<br/>Location · Date · Weather · Estimates"]
-        LAB["📊 ML Research Lab<br/>Metrics · Experiments · Plots"]
-        METHOD["📘 Methodology<br/>Data sources · Limitations"]
-    end
+  Weather and geocoding               Open-Meteo
 
-    subgraph APPLICATION["02 · APPLICATION API — FastAPI"]
-        direction LR
-        API["REST Endpoints<br/>Predict · Weather · Soil · Geocode"]
-        VALIDATE["Request Validation<br/>Schemas · Units · Error Handling"]
-        ORCH["Prediction Orchestrator"]
-        CACHE[("Response Cache")]
-        API --> VALIDATE --> ORCH
-        API <--> CACHE
-    end
+  Training weather source described   NASA POWER
+  in project materials                
 
-    subgraph DATA["03 · DATA INTEGRATIONS"]
-        direction LR
-        WEATHER["Open-Meteo<br/>Weather + Geocoding"]
-        SOIL["Soil Context<br/>SoilGrids / Local Rasters"]
-    end
+  Supplementary context               Optional mapped soil information,
+                                      if data is available and verified
 
-    subgraph INFERENCE["04 · ML INFERENCE — Saved Models"]
-        direction LR
-        FEATURES["Feature Engineering<br/>Fixed 11-feature schema"]
-        RF["Random Forest<br/>Regressor"]
-        XGB["XGBoost<br/>Regressor"]
-        OUTPUT["Two Independent Estimates<br/>mm/day + Experimental Warning"]
-        FEATURES --> RF
-        FEATURES --> XGB
-        RF --> OUTPUT
-        XGB --> OUTPUT
-    end
+  Research interface                  Ten ML experiments and data-quality
+                                      analysis
+  -----------------------------------------------------------------------
 
-    subgraph RESEARCH["05 · RESEARCH ARTIFACTS"]
-        direction LR
-        RESULTS["Metrics + CSV Tables"]
-        PLOTS["Plots + Analysis Outputs"]
-        FRONTDATA["Frontend Experiment Data"]
-    end
+### The problem in simple words
 
-    USER --> DASH
-    USER --> LAB
-    DASH <-->|"HTTP / JSON"| API
-    LAB --> FRONTDATA
-    METHOD -.-> FRONTDATA
-    ORCH <--> CACHE
-    CACHE <--> WEATHER
-    CACHE <--> SOIL
-    ORCH --> FEATURES
-    OUTPUT --> API
-    RESULTS -.-> FRONTDATA
-    PLOTS -.-> LAB
+Weather changes every day. Temperature, rainfall, humidity, wind and
+solar radiation provide information about atmospheric water demand and
+rainfall. This project explores whether machine-learning models can
+learn the relationship between those inputs and a simplified daily
+water-deficit target.
 
-    classDef user fill:#172554,stroke:#60A5FA,color:#FFFFFF,stroke-width:2px;
-    classDef presentation fill:#EFF6FF,stroke:#60A5FA,color:#172554,stroke-width:1.5px;
-    classDef api fill:#ECFDF5,stroke:#34D399,color:#064E3B,stroke-width:1.5px;
-    classDef data fill:#FFF7ED,stroke:#FB923C,color:#7C2D12,stroke-width:1.5px;
-    classDef model fill:#F5F3FF,stroke:#A78BFA,color:#4C1D95,stroke-width:1.5px;
-    classDef research fill:#FDF2F8,stroke:#F472B6,color:#831843,stroke-width:1.5px;
+The project demonstrates an end-to-end workflow: prepare data, create a
+target, train regression models, evaluate them, examine model behaviour,
+expose predictions through an API, and present the results in a web
+dashboard.
 
-    class USER user;
-    class DASH,LAB,METHOD presentation;
-    class API,VALIDATE,ORCH,CACHE api;
-    class WEATHER,SOIL data;
-    class FEATURES,RF,XGB,OUTPUT model;
-    class RESULTS,PLOTS,FRONTDATA research;
+It is **not yet a validated farm-irrigation advisory system**.
+
+------------------------------------------------------------------------
+
+## What the application does
+
+The application has two main user experiences.
+
+### 1. Farmer Dashboard
+
+The intended workflow is:
+
+1.  The user selects a location and prediction date.
+2.  The backend retrieves daily weather information for that location
+    and date.
+3.  The backend validates the required fields and prepares the model's
+    11 inputs in the correct order.
+4.  Random Forest and XGBoost produce two separate estimates of the
+    simulated target.
+5.  The interface displays the estimates with weather information and an
+    experimental-use warning.
+6.  Supplementary soil context may be shown if the relevant data is
+    available and its values, units, depth and scale have been verified.
+
+A planting date or crop age may be displayed for context, but **neither
+is an input to the current models**. Soil properties are also not model
+inputs.
+
+The two model estimates are not a calibrated confidence interval. A
+difference between the two predictions should not be interpreted as a
+probability of error.
+
+### 2. ML Research Lab
+
+The Research Lab presents experiment results and visualizations to help
+investigate model performance, feature contributions, sensitivity,
+geographic differences and data quality.
+
+It is an analytical view of saved experiment results. **Opening a
+Research Lab tab does not necessarily retrain the models live.** Check
+the implementation and data source for each chart before claiming that
+it is dynamically recalculated.
+
+### High-level architecture
+
+``` mermaid
+flowchart TD
+    U[User] --> UI[React + TypeScript + Vite]
+    UI --> FD[Farmer Dashboard]
+    UI --> RL[ML Research Lab]
+    FD --> API[FastAPI Backend]
+    API --> W[Open-Meteo Weather / Geocoding]
+    API --> FE[Feature Validation and Engineering]
+    FE --> RF[Random Forest Regressor]
+    FE --> XGB[XGBoost Regressor]
+    RF --> OUT[Two Independent Proxy Estimates]
+    XGB --> OUT
+    OUT --> API
+    API --> FD
+    SOIL[Optional mapped soil context] -. supplementary only .-> FD
+    EXP[Saved experiment tables and plots] --> RL
 ```
 
+**Model boundary:** current prediction inputs are location, daily
+weather and seasonal features only. Soil properties, field area,
+planting date, crop age, crop variety, growth stage, irrigation method,
+and prior irrigation are not current model inputs.
 
-### Layer responsibilities
-
-| Layer / component | Responsibility | Important boundary |
-|---|---|---|
-| Farmer Dashboard | Collects location, planting date, and prediction date; presents weather and both estimates | Planting date is contextual in the current model version; it does not affect inference |
-| ML Research Lab | Presents model metrics, experiment summaries, plots, and error analyses | Some displayed experiment values are maintained in a typed frontend data module rather than loaded dynamically from every CSV |
-| FastAPI routes and schemas | Validates requests, exposes REST endpoints, and returns structured responses | API success does not by itself prove model artifacts loaded or that outputs are agronomically valid |
-| Weather service | Retrieves daily weather and geocoding data from Open-Meteo, with caching | Must not silently replace missing required weather values with arbitrary defaults |
-| Soil context service | Attempts to retrieve soil data and optionally read local rasters | Soil properties are supplementary only; current models do not use them |
-| Feature engineering | Converts weather/location/date into the exact 11 model inputs in the documented order | Feature names, units, preprocessing, and order must match training |
-| Random Forest and XGBoost | Produce two independent estimates of the simulated target | Predictions should not be averaged or treated as calibrated uncertainty without additional evaluation |
-| Experiment assets | Store metrics, split metadata, tables, and plot files used by research views | Research results must be traceable to the relevant split and experiment procedure |
-
-### Prediction boundary and interpretation
-
-The inference path is:
-
-1. The user chooses a location and prediction date; the app retrieves weather for that location/date.
-2. The backend validates required weather fields and derives the seasonal features `sin_day_of_year` and `cos_day_of_year`.
-3. The backend constructs the fixed, ordered 11-feature vector and sends it to both saved models.
-4. The API returns the two independent model estimates, relevant weather/context information, and the experimental-use warning.
-5. The frontend labels the output as a **simulated daily irrigation-deficit proxy (mm/day)**, not as measured water demand or a validated irrigation schedule.
-
-Soil data and planting date may be displayed as context, but neither is included in the current model feature vector. The research dashboard is an analytical view of saved experiment results; it is not a separate inference model.
+------------------------------------------------------------------------
 
 ## Dataset and target construction
 
-The experiment metadata describes a dataset with **71,214 daily records**, **39 candidate Indian locations**, and **47 columns**. These are location-weather records; they should not be interpreted as 71,214 independent farm trials or as evidence that sugarcane was planted at every location on every recorded day.
+### What one row represents
 
-The target column is `irrigation_requirement_mm`. It is a **simulated daily net irrigation-deficit proxy in mm/day**, generated from weather/date/location-derived calculations rather than measured irrigation events.
+The dataset summary describes **71,214 daily location rows** across **39
+candidate Indian locations** and 47 columns.
 
-The documented target-construction approach is:
+A row represents weather and derived values for a location on a
+particular day. It is not a separate farm experiment. The data does not
+establish that sugarcane was cultivated at every candidate location on
+every recorded date.
 
-1. Calculate reference evapotranspiration (`ET0`) using the Hargreaves–Samani method, based on temperature range, mean temperature, latitude, and date-derived extraterrestrial radiation.
-2. Calculate a crop evapotranspiration proxy: `ETc_proxy = 1.20 × ET0`, using a fixed assumed crop coefficient.
-3. Calculate effective rainfall proxy: `effective_rainfall_proxy = min(0.80 × precipitation, ETc_proxy)`.
-4. Calculate the target: `irrigation_requirement_mm = max(ETc_proxy − effective_rainfall_proxy, 0)`.
+### What is the target?
 
-The fixed crop coefficient and effective-rainfall fraction are assumptions, not field-calibrated parameters. This target construction does not account for measured soil-water storage, crop stage, irrigation method, irrigation efficiency, field management, or observed irrigation events.
+The target column is `irrigation_requirement_mm`. In the current
+project, this name refers to a **simulated daily net irrigation-deficit
+proxy in mm/day**, not measured irrigation events or validated
+crop-water demand.
 
-### Dataset quality context
+### Target-generation approach
 
-The bundled `data_quality.csv` reports:
+The project uses the following simplified sequence:
 
-- All 11 model input features have 0% missing values in the summarized dataset.
-- Soil properties have approximately **89.744% missingness** in that dataset.
-- Field ID, crop variety, planting/harvest dates, growth stage, irrigation method, water source, and previous irrigation are 100% missing in that dataset summary.
-- The model therefore does not currently use soil properties or crop-stage variables.
+1.  **Reference evapotranspiration (`ET0`)** is estimated using the
+    Hargreaves--Samani method, which uses temperature-related
+    information and location/date-based solar geometry.
 
-The raw training dataset is not included in this repository snapshot; the experiment summaries, tables, and plots are included.
+2.  **Crop evapotranspiration proxy (`ETc_proxy`)** is calculated as
+    `1.20 × ET0`.
 
-## Machine-learning features
+3.  **Effective rainfall proxy** is calculated as
+    `min(0.80 × precipitation, ETc_proxy)`.
 
-Both models expect these **11 features in this exact order**:
+4.  The target is calculated as:
 
-| # | Feature | Unit / meaning | Source |
-|---:|---|---|---|
-| 1 | `latitude` | Decimal degrees | Selected coordinates / geocoding |
-| 2 | `longitude` | Decimal degrees | Selected coordinates / geocoding |
-| 3 | `temperature_mean_c` | °C | Open-Meteo daily mean temperature |
-| 4 | `temperature_max_c` | °C | Open-Meteo daily maximum temperature |
-| 5 | `temperature_min_c` | °C | Open-Meteo daily minimum temperature |
-| 6 | `relative_humidity_percent` | % | Open-Meteo daily mean relative humidity |
-| 7 | `precipitation_mm_day` | mm/day | Open-Meteo daily precipitation sum |
-| 8 | `wind_speed_m_s` | m/s | Open-Meteo daily maximum 10 m wind speed |
-| 9 | `solar_radiation_kwh_m2_day` | kWh/m²/day | Open-Meteo shortwave radiation sum converted from MJ/m²/day by dividing by 3.6 |
-| 10 | `sin_day_of_year` | -1 to 1 | Seasonal encoding: `sin(2π × day_of_year / 365.25)` |
-| 11 | `cos_day_of_year` | -1 to 1 | Seasonal encoding: `cos(2π × day_of_year / 365.25)` |
+    `irrigation_requirement_mm = max(ETc_proxy − effective_rainfall_proxy, 0)`
 
-**Not model inputs:** planting date, crop age, soil pH, texture, bulk density, soil organic carbon, CEC, crop variety, and growth stage. The current app may display some of these as context, but they do not influence the predictions.
+The factor `1.20` is an assumed crop coefficient. The `0.80` rainfall
+factor is also a project assumption. These are not measured values
+calibrated for every field, cultivar, crop stage or location.
 
-## Model evaluation results
+### Why the target is only a proxy
 
-The bundled `experiment_summary.json` and `tables/new_split_baseline_metrics.csv` report the following metrics. The reported split contains **56,606 training records across 31 locations** and **14,608 evaluation records across 8 listed held-out locations**.
+The target calculation does not fully model or measure:
 
-| Model | Split | Records | MAE (mm/day) | RMSE (mm/day) | R² |
-|---|---|---:|---:|---:|---:|
-| Random Forest | Train | 56,606 | 0.1056 | 0.1626 | 0.9993 |
-| Random Forest | Reported held-out locations | 14,608 | **0.2156** | 0.3197 | 0.9971 |
-| XGBoost | Train | 56,606 | 0.1758 | 0.2295 | 0.9986 |
-| XGBoost | Reported held-out locations | 14,608 | 0.2250 | **0.2939** | **0.9975** |
+-   soil-water storage and current soil moisture;
+-   crop age, crop stage, cultivar or root depth;
+-   field area or farm-specific management;
+-   irrigation method and application efficiency;
+-   runoff, drainage, groundwater contribution or irrigation events;
+-   measured water applied by farmers.
 
-### How to interpret these metrics
+The models learn to approximate the target created by this formula. A
+high evaluation score therefore demonstrates agreement with the
+constructed target, not proof of actual irrigation accuracy.
 
-- **MAE** is the average absolute prediction error, expressed here in mm/day.
-- **RMSE** penalizes larger errors more strongly than MAE and is also expressed in mm/day.
-- **R²** measures fit relative to the variance of the target in the evaluation data; it is not a measure of real-world irrigation usefulness.
-- In the reported evaluation, Random Forest has a slightly lower MAE, while XGBoost has a lower RMSE and slightly higher R². These metrics do not establish a universally superior model.
-- The target itself is formula-derived. Strong metrics primarily show that the model can reproduce that constructed proxy; they do **not** demonstrate accuracy against actual farm irrigation requirements.
-- Before making a strong claim of geographic generalization, verify the training notebook/model provenance and confirm that the saved models were not trained on any of the evaluation records or locations. The repository contains split metadata but does not include the original training notebook or raw training dataset needed to independently reproduce that separation.
+------------------------------------------------------------------------
 
-## Research experiments
+## Why field area is not a model input
 
-The `sugarcane_ml_experiments_results/` directory contains experiment summaries, CSV tables, and plots used by the ML Research Lab.
+The model predicts a **water depth** in millimetres per day. A depth
+does not depend on the size of the field. Field area is needed to
+convert the depth into a total volume.
 
-| Experiment | Purpose | Important caveat |
-|---|---|---|
-| Baseline evaluation | MAE, RMSE, and R² comparison | Measures performance against the simulated target |
-| Learning curves | Observe error as training data size increases | Depends on split and training procedure |
-| Feature importance | Compare tree-model importance | Importance is not causality |
-| SHAP summaries | Explain feature contributions to model output | Explanations are for this model and target, not agronomic causal effects |
-| Feature ablation | Compare selected feature groups | Results depend on experimental setup and retraining/evaluation methodology |
-| PCA | Explore lower-dimensional representations | Dimensionality reduction may reduce interpretability and model performance |
-| Sensitivity analysis | Sweep one feature while holding others at reference values | Synthetic sweeps can create unrealistic combinations of inputs |
-| Location-wise errors/residuals | Inspect variation across locations | Small location counts and proxy target limit generalization claims |
-| K-Means weather clusters | Explore weather-pattern groupings and errors | Clusters are exploratory, not validated agricultural climate classes |
-| Data quality audit | Show missingness and available feature coverage | It summarizes the dataset used for experiments, not every future API response |
+For water depth in millimetres and field area in hectares:
 
-The frontend contains a typed experiment-data module (`frontend/src/data/experimentsData.ts`) with values corresponding to the experiment tables. If the experiment tables change, verify and update the frontend data module as well; it should not be assumed to load all CSV tables dynamically at runtime.
+`Theoretical volume (m³) = depth (mm) × area (ha) × 10`
 
-## Data sources and integrations
+Example:
+
+-   Proxy depth: 5 mm/day
+-   Field area: 2 hectares
+-   Theoretical volume: `5 × 2 × 10 = 100 m³/day`
+
+This is an arithmetic conversion, not an irrigation recommendation. It
+does not account for application efficiency, soil-water availability,
+crop stage, rainfall forecasts, or local management. Since the current
+target is a simulated proxy, converting it into volume does not make it
+a validated farm-water requirement.
+
+------------------------------------------------------------------------
+
+## Model features
+
+Both models expect the following **11 features in this exact order**.
+
+    \# Feature                        Meaning / unit
+  ---- ------------------------------ ---------------------------------------
+     1 `latitude`                     Location latitude in decimal degrees
+     2 `longitude`                    Location longitude in decimal degrees
+     3 `temperature_mean_c`           Daily mean temperature, °C
+     4 `temperature_max_c`            Daily maximum temperature, °C
+     5 `temperature_min_c`            Daily minimum temperature, °C
+     6 `relative_humidity_percent`    Daily relative humidity, %
+     7 `precipitation_mm_day`         Daily precipitation, mm/day
+     8 `wind_speed_m_s`               Daily wind speed, m/s
+     9 `solar_radiation_kwh_m2_day`   Daily solar radiation, kWh/m²/day
+    10 `sin_day_of_year`              Sine encoding of the day of year
+    11 `cos_day_of_year`              Cosine encoding of the day of year
+
+Sine and cosine encode the annual calendar as a cycle. This avoids
+treating the end of December and beginning of January as far apart in
+the seasonal representation.
+
+### Important feature boundary
+
+The following are **not inputs to the current trained models**:
+
+-   soil pH, texture, clay, organic carbon or other soil properties;
+-   field area;
+-   planting date and crop age;
+-   crop variety and growth stage;
+-   irrigation method, soil moisture and previous irrigation.
+
+Do not describe the current model as soil-aware or crop-stage-aware.
+
+### Training/live weather consistency
+
+Project materials describe NASA POWER as the training weather source and
+Open-Meteo as the live weather integration. Before real-world use,
+verify that variable definitions, units, time aggregation, timezone/day
+boundaries and missing-data handling are compatible. For example, a
+daily maximum wind speed and a daily mean wind speed are not
+interchangeable.
+
+The backend should reject unavailable required weather values rather
+than silently replacing them with arbitrary defaults.
+
+------------------------------------------------------------------------
+
+## Models and evaluation
+
+### What is regression?
+
+Regression is a machine-learning task where the output is a continuous
+number. This project is a regression task because it predicts a numeric
+depth in mm/day rather than a category such as "high" or "low."
+
+### Random Forest Regressor
+
+Random Forest trains multiple decision trees and combines their
+predictions. It can learn nonlinear relationships in structured data and
+often provides a stable baseline.
+
+### XGBoost Regressor
+
+XGBoost builds trees sequentially. Each new tree attempts to reduce
+remaining prediction errors. It can model complex patterns in tabular
+data but still requires careful evaluation and tuning.
+
+### Evaluation split described in project results
+
+The documented evaluation uses:
+
+-   **56,606 training rows** from 31 locations;
+-   **14,608 evaluation rows** from 8 held-out locations.
+
+Holding out complete locations is more informative about geographic
+transfer than randomly splitting daily rows from the same locations.
+However, the original training notebook and raw training dataset were
+not present in the reviewed repository snapshot. The exact split and
+model-training provenance should be independently reproduced before
+making strong geographic-generalization claims.
+
+### Reported metrics
+
+  ------------------------------------------------------------------------
+  Model       Split           MAE (mm/day)   RMSE (mm/day)              R²
+  ----------- ------------ --------------- --------------- ---------------
+  Random      Training              0.1056          0.1626          0.9993
+  Forest                                                   
+
+  Random      Held-out        **0.215553**        0.319741        0.997057
+  Forest      evaluation                                   
+              locations                                    
+
+  XGBoost     Training              0.1758          0.2295          0.9986
+
+  XGBoost     Held-out            0.224959    **0.293889**    **0.997514**
+              evaluation                                   
+              locations                                    
+  ------------------------------------------------------------------------
+
+### How to interpret the metrics
+
+-   **MAE (Mean Absolute Error):** the average absolute difference
+    between prediction and target. Lower is better.
+-   **RMSE (Root Mean Squared Error):** an error measure that penalizes
+    larger errors more strongly than MAE. Lower is better.
+-   **R² (R-squared):** measures how well predictions fit the target
+    relative to a mean-based baseline. It is not a percentage-accuracy
+    score.
+
+On the reported held-out evaluation:
+
+-   Random Forest has slightly lower MAE.
+-   XGBoost has lower RMSE and slightly higher R².
+-   The comparison is mixed; neither model wins on every metric.
+
+Most importantly, these scores describe fit to a **formula-generated
+target**, not agreement with measured farm irrigation.
+
+------------------------------------------------------------------------
+
+## ML Research Lab: concepts, results, and interpretation
+
+The Research Lab contains ten analysis areas. The descriptions below
+explain the concept, the reported project result, and the limits of
+interpretation.
+
+### 1. Baseline Metrics
+
+**Theory:** Metrics summarize how close model predictions are to the
+target.
+
+**Reported result:** Random Forest has MAE 0.215553, RMSE 0.319741 and
+R² 0.997057 on the held-out evaluation. XGBoost has MAE 0.224959, RMSE
+0.293889 and R² 0.997514.
+
+**Interpretation:** Random Forest has the lower average absolute error,
+while XGBoost has lower RMSE and slightly higher R². The result is
+mixed. These metrics describe fit to the simulated target only.
+
+### 2. Architectures & Target
+
+**Theory:** A target is the value the model learns to estimate. An
+architecture is the learning approach used to map inputs to the target.
+
+**Project context:** Both models use the same 11 features and the same
+formula-derived target. Random Forest averages trees; XGBoost adds trees
+sequentially to reduce remaining errors.
+
+**Interpretation:** Using the same inputs and target makes the
+comparison more meaningful. It does not prove either model predicts
+actual irrigation better than a validated agricultural method.
+
+### 3. Learning Curves
+
+**Theory:** Learning curves show how training and evaluation error
+changes as the amount of training data grows. A gap between training and
+evaluation error can help investigate overfitting and generalization.
+
+**Reported validation MAE:**
+
+  Training-data fraction     Random Forest MAE   XGBoost MAE
+  ------------------------ ------------------- -------------
+  10%                                   0.4519        0.3064
+  100%                                  0.2159        0.2219
+
+**Interpretation:** Validation MAE decreases as more training data is
+used in the reported experiment. This suggests additional examples
+helped the models reproduce the target. More rows alone do not guarantee
+better coverage of farms, climates or management conditions.
+
+### 4. Feature Importance & SHAP
+
+**Theory:** Feature importance summarizes how much a model relies on
+each input overall. SHAP (SHapley Additive exPlanations) estimates how
+individual features contribute to model predictions.
+
+**Reported feature importance:**
+
+  Feature                 Random Forest   XGBoost
+  --------------------- --------------- ---------
+  Maximum temperature            63.63%    42.79%
+  Precipitation                  32.01%    33.01%
+  Solar radiation                 1.39%     9.09%
+
+**Interpretation:** Both models rely heavily on maximum temperature and
+precipitation. This is consistent with the formula used to construct the
+target: temperature-related information contributes to estimated
+evapotranspiration, and rainfall affects the rainfall subtraction.
+Importance and SHAP explain model behaviour; they do not prove causation
+or explain the full physical process in a sugarcane field.
+
+### 5. Feature Ablation
+
+**Theory:** Feature ablation removes one feature or a group of features
+and measures how performance changes.
+
+**Reported MAE comparisons:**
+
+  Feature group                     Random Forest MAE   XGBoost MAE
+  ------------------------------- ------------------- -------------
+  All 11 features                              0.2156        0.2250
+  Without location                             0.2672        0.3260
+  Without seasonal features                    0.3104        0.4154
+  Weather only                                 0.3745        0.4800
+  Location and seasonality only                2.5722        2.7432
+
+**Interpretation:** The full feature set performs best among these
+tested groups. Removing location or seasonal information increases
+error, while location and seasonality alone are not enough to reproduce
+the target. This indicates complementary information in the feature
+groups for the current proxy task.
+
+### 6. PCA Experiments
+
+**Theory:** PCA (Principal Component Analysis) transforms related inputs
+into fewer combined components that preserve as much overall variation
+in the original inputs as possible. Preserving input variance does not
+guarantee preserving the information most useful for prediction.
+
+**Reported results:**
+
+  -----------------------------------------------------------------------
+  PCA components     Input variance  Random Forest MAE        XGBoost MAE
+                          preserved                    
+  -------------- ------------------ ------------------ ------------------
+  3                          71.98%              1.292              1.399
+
+  5                          87.70%              0.992              1.178
+
+  8                          98.61%              0.630              0.688
+
+  Original 11                   ---             0.2156             0.2250
+  features                                             
+  -----------------------------------------------------------------------
+
+**Interpretation:** The original 11 features outperform the tested PCA
+configurations. PCA did not improve prediction performance in these
+experiments. PCA visual groupings should not automatically be
+interpreted as official climate zones, crop stages or soil categories.
+
+### 7. Weather Regimes / Clustering
+
+**Theory:** Clustering is an unsupervised learning method that groups
+records with similar input patterns without predefined labels. Cluster
+numbers have no inherent meaning; they need to be interpreted using the
+weather summaries.
+
+**Reported four-cluster summaries:**
+
+  -------------------------------------------------------------------------
+  Cluster                 Mean  Mean rainfall         RF MAE    XGBoost MAE
+  description      temperature                               
+  ------------- -------------- -------------- -------------- --------------
+  Very wet /            26.1°C   20.47 mm/day          0.122          0.192
+  humid                                                      
+
+  Cooler /              17.8°C    0.31 mm/day          0.160          0.193
+  drier                                                      
+
+  Moderately            25.5°C    2.93 mm/day          0.256          0.250
+  warm / humid                                               
+
+  Hotter /              30.4°C    0.53 mm/day          0.203          0.209
+  drier                                                      
+  -------------------------------------------------------------------------
+
+**Interpretation:** Error differs between the weather groups. The
+moderately warm/humid group has the highest MAE for both models among
+the four reported groups. These are exploratory mathematical groups, not
+official climate regions or crop stages. Errors still refer to the
+simulated target.
+
+### 8. One-Dimensional Sensitivity
+
+**Theory:** Sensitivity analysis changes one input across a range while
+holding other inputs fixed, then observes how the model prediction
+changes.
+
+**Reported result:** Across the tested maximum-temperature range of
+approximately 22.13°C to 41.42°C, Random Forest predictions rise from
+about 8.57 to 19.86 mm/day, and XGBoost predictions rise from about 7.42
+to 19.17 mm/day.
+
+**Interpretation:** Both models predict higher proxy values at the
+hotter end of the tested range. This is consistent with the temperature
+sensitivity built into the target formula. It is a model-response
+experiment, not a real-world field experiment; fixed-input sweeps can
+create weather combinations that do not occur naturally.
+
+### 9. Location Errors / Residuals
+
+**Theory:** A residual is `target − prediction`. Location-wise error
+analysis checks whether model errors vary across held-out locations
+instead of relying only on one overall score.
+
+**Reported location MAE extremes:**
+
+-   Random Forest: from 0.1218 at TS02 to 0.3439 at TN03.
+-   XGBoost: from 0.1976 at GJ02 to 0.3014 at TN03.
+
+**Interpretation:** Errors are not uniform across the listed locations.
+TN03 has the highest reported MAE for both models among these extremes.
+This can motivate further checks of weather distribution, location
+coverage, input consistency and target behaviour. The error alone does
+not identify the cause, and eight held-out locations do not establish
+nationwide farm accuracy.
+
+### 10. Data Quality Audit
+
+**Theory:** A data-quality audit checks missing values, units,
+duplicates, date/location alignment, feature order, target meaning,
+geographic coverage and saved model artifacts.
+
+**Reported dataset summary:**
+
+-   71,214 daily location rows across 39 locations.
+-   The audited core weather, date, location and target fields have no
+    missing values in the summarized dataset.
+-   Soil properties have approximately **89.7% missingness**.
+-   Field ID, crop variety, growth stage, irrigation method, and
+    previous irrigation are 100% missing in the summarized fields.
+-   Independent field-measured irrigation validation is absent.
+
+**Interpretation:** The dataset supports the current weather-based proxy
+experiment, but it does not contain the farm-level observations needed
+to validate actual irrigation recommendations. Soil information is too
+sparse to be treated as a complete input without additional work.
+
+**Implementation caution:** verify that actual model binaries are
+present and load correctly. Git LFS pointer files are not model
+binaries. The training notebook, original dataset, split provenance,
+exact hyperparameters and dependency versions should be preserved to
+make the experiment reproducible.
+
+### Bonus concept: residual analysis
+
+A residual is the target minus the prediction. If the target is 5.0
+mm/day and the model predicts 4.7 mm/day, the residual is +0.3 mm/day.
+Residual plots help reveal unusually large errors, systematic over- or
+under-prediction, or changes in error size across the target range.
+
+Residuals near zero indicate agreement with the formula-generated
+target, not necessarily with measured irrigation.
+
+------------------------------------------------------------------------
+
+## Data sources and soil context
+
+### NASA POWER
+
+Project materials identify NASA POWER as the primary source for the
+training weather records.
+
+-   Website: https://power.larc.nasa.gov/
 
 ### Open-Meteo
 
-Used for location search and daily weather retrieval. The service selects forecast or historical data according to the requested date and rejects dates outside the supported forecast horizon. The app should display the source/date type and should not silently substitute arbitrary weather defaults when required values are unavailable.
+Open-Meteo is used for location search and daily weather retrieval in
+the application. Verify variable definitions, units, date boundaries and
+forecast/historical behaviour before relying on live values.
 
-- Weather documentation: https://open-meteo.com/en/docs
-- Historical weather documentation: https://open-meteo.com/en/docs/historical-weather-api
-- Geocoding documentation: https://open-meteo.com/en/docs/geocoding-api
+-   Weather documentation: https://open-meteo.com/en/docs
+-   Historical weather API:
+    https://open-meteo.com/en/docs/historical-weather-api
+-   Geocoding API: https://open-meteo.com/en/docs/geocoding-api
 
-Check the provider's current terms, availability, and usage limits before public or commercial deployment.
+### Soil data
 
-### ISRIC SoilGrids
+Soil data is supplementary context and is not used by the current
+trained models. SoilGrids REST availability should not be assumed. The
+project explored a local-raster approach using mapped soil products such
+as OpenLandMap, but exports must be completed and verified before any
+local soil lookup can be relied upon.
 
-The app attempts to retrieve soil properties and can optionally read local GeoTIFF rasters when available. SoilGrids REST availability should not be assumed. This repository contains a placeholder under `data/soilgrids/`, not a complete set of raster data. If soil data is unavailable, the app is intended to report that fact rather than invent values.
+-   ISRIC SoilGrids: https://www.isric.org/explore/soilgrids/
+-   SoilGrids documentation:
+    https://docs.isric.org/globaldata/soilgrids/
+-   OpenLandMap documentation: https://docs.openlandmap.org/
+-   OpenLandMap STAC catalogue: https://stac.openlandmap.org/
 
-- SoilGrids information: https://www.isric.org/explore/soilgrids/
-- SoilGrids documentation: https://docs.isric.org/globaldata/soilgrids/
+Before displaying soil values, verify the product, band, depth interval,
+scale factor, physical unit, NoData handling, coordinate reference
+system and coverage. Mapped soil values are not direct measurements from
+the selected farm.
 
-**Important implementation note:** review the SoilGrids parser's depth selection before relying on displayed depth labels. The current parser selects the first non-null depth value without explicitly matching the requested `0–30 cm` interval, so a value from a shallower interval could be labelled as `0–30 cm`.
+------------------------------------------------------------------------
 
 ## Repository structure
 
-```text
+The exact structure may vary by branch or deployment. The reviewed
+project layout includes:
+
+``` text
 .
 ├── app/
-│   ├── core/config.py                 # Paths, API URLs, model feature order
-│   ├── main.py                        # FastAPI routes and static serving
-│   ├── schemas/irrigation.py          # Request/response schemas
+│   ├── core/config.py
+│   ├── main.py
+│   ├── schemas/
+│   │   └── irrigation.py
 │   └── services/
-│       ├── irrigation_service.py      # Model loading, feature engineering, inference
-│       ├── weather_service.py         # Open-Meteo integration and caching
-│       └── soil_service.py            # SoilGrids / local raster provider
+│       ├── irrigation_service.py
+│       ├── weather_service.py
+│       └── soil_service.py
 ├── Models/
-│   ├── random_forest.joblib           # Git LFS model artifact
-│   └── xgboost.joblib                 # Git LFS model artifact
+│   ├── random_forest.joblib
+│   └── xgboost.joblib
 ├── frontend/
-│   ├── src/pages/                     # Dashboard, model lab, methodology, history
-│   ├── src/components/                # UI components and charts
-│   ├── src/data/experimentsData.ts    # Experiment values used by research views
-│   └── public/plots/                  # Static plot images
+│   ├── src/pages/
+│   ├── src/components/
+│   ├── src/data/experimentsData.ts
+│   └── public/plots/
 ├── sugarcane_ml_experiments_results/
 │   ├── experiment_summary.json
 │   ├── experiment_split_info.json
-│   ├── tables/                        # Evaluation CSV files
-│   └── plots/                         # Generated figures
-├── tests/                             # Pytest suite
-├── data/soilgrids/                    # Optional local soil rasters (not bundled)
-├── .env.example
+│   ├── tables/
+│   └── plots/
+├── tests/
+├── data/
+│   └── soilgrids/
 ├── .gitattributes
 ├── .gitignore
 ├── requirements.txt
 └── README.md
 ```
 
-## Setup and running locally
+------------------------------------------------------------------------
+
+## Run locally
 
 ### Prerequisites
 
-- Python with versions compatible with the serialized scikit-learn/XGBoost model artifacts.
-- Node.js and npm.
-- Git and Git LFS.
-- Network access for Open-Meteo requests; SoilGrids may be unavailable.
+-   Python version compatible with the project's dependencies and
+    serialized model artifacts.
+-   Node.js and npm.
+-   Git and Git LFS.
+-   Network access for Open-Meteo requests.
 
 ### 1. Clone the repository and retrieve model artifacts
 
-Use Git rather than downloading the repository as a ZIP when you need the actual model files:
+Use Git rather than a source ZIP if the models are stored with Git LFS:
 
-```bash
+``` bash
 git lfs install
 git clone https://github.com/jainamdavda1-pixel/sugarcane-irrigation-prediction.git
 cd sugarcane-irrigation-prediction
 git lfs pull
 ```
 
-GitHub source ZIP downloads may contain small Git LFS pointer files instead of the actual `.joblib` binaries. Verify the files before starting the API (see [Model files and Git LFS](#model-files-and-git-lfs)).
+A GitHub source ZIP may contain LFS pointer text rather than the actual
+`.joblib` binaries. Verify the files before starting inference.
 
 ### 2. Set up the backend
 
-```bash
+From the repository root:
+
+``` bash
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-```
-
-Start the backend from the repository root:
-
-```bash
 uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-- API: http://127.0.0.1:8000
-- Swagger docs: http://127.0.0.1:8000/docs
-- Health endpoint: http://127.0.0.1:8000/health
+Common local URLs:
 
-The current backend configuration reads supported values from environment variables. Do not assume every variable shown in `.env.example` is consumed by the current config module; verify `app/core/config.py` before relying on a setting. For local defaults, a backend `.env` file is not required.
+-   API root: http://127.0.0.1:8000
+-   Interactive API documentation: http://127.0.0.1:8000/docs
+-   Health endpoint: http://127.0.0.1:8000/health
 
 ### 3. Set up the frontend
 
-In a second terminal, from the repository root:
+Open a second terminal:
 
-```bash
+``` bash
 cd frontend
 npm ci
 ```
 
-Create `frontend/.env` if needed, using the existing `frontend/.env.example` as a template:
+If required, create `frontend/.env` using the existing example as a
+guide:
 
-```env
+``` env
 VITE_API_BASE_URL=http://localhost:8000
 ```
 
-Run the frontend in development mode:
+Start the development server:
 
-```bash
+``` bash
 npm run dev
 ```
 
-Open the URL printed by Vite, typically http://localhost:5173.
+Open the local URL printed by Vite, typically http://localhost:5173.
 
-To build the production frontend:
+Build the frontend:
 
-```bash
+``` bash
 npm run build
 ```
 
-After a production build, the backend serves `frontend/dist` when present.
+### 4. Verify model files before a demo
+
+``` bash
+git lfs ls-files
+head -n 3 Models/random_forest.joblib
+```
+
+If the file begins with `version https://git-lfs.github.com/spec/v1`, it
+is an LFS pointer, not the real model. Retrieve the actual object with
+`git lfs pull`.
+
+Do not claim successful live prediction until both actual model objects
+load and a complete location/date prediction has been tested.
+
+------------------------------------------------------------------------
 
 ## API endpoints
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `GET` | `/` | Serves the built frontend when available; otherwise returns API status/endpoints |
-| `GET` | `/health` | Reports whether model objects loaded and the configured model path |
-| `GET` | `/docs` | Interactive API documentation |
-| `GET` | `/geocode?q=Kolhapur` | Searches locations using Open-Meteo geocoding |
-| `GET` | `/weather?latitude=16.705&longitude=74.243&prediction_date=2026-10-02` | Retrieves daily weather for a location/date |
-| `GET` | `/soil?latitude=16.705&longitude=74.243` | Retrieves supplementary soil context when available |
-| `GET` | `/experiments/summary` | Returns the experiment summary JSON |
-| `POST` | `/predict` | Predicts using location/date workflow or legacy direct features |
+The reviewed backend exposes these routes; confirm the current
+implementation in `/docs` before relying on a route or request shape.
 
-### Farmer prediction request
+  ------------------------------------------------------------------------------------------------------------------------
+  Method                  Endpoint                                                                 Purpose
+  ----------------------- ------------------------------------------------------------------------ -----------------------
+  `GET`                   `/`                                                                      Root status or built
+                                                                                                   frontend
 
-```json
+  `GET`                   `/health`                                                                Reports
+                                                                                                   API/model-loading
+                                                                                                   status
+
+  `GET`                   `/docs`                                                                  Interactive API
+                                                                                                   documentation
+
+  `GET`                   `/geocode?q=Kolhapur`                                                    Location search
+
+  `GET`                   `/weather?latitude=16.705&longitude=74.243&prediction_date=2026-10-02`   Daily weather retrieval
+
+  `GET`                   `/soil?latitude=16.705&longitude=74.243`                                 Optional supplementary
+                                                                                                   soil context
+
+  `GET`                   `/experiments/summary`                                                   Experiment summary
+
+  `POST`                  `/predict`                                                               Location/date
+                                                                                                   prediction workflow or
+                                                                                                   supported
+                                                                                                   direct-feature mode
+  ------------------------------------------------------------------------------------------------------------------------
+
+Example location/date prediction request:
+
+``` json
 {
-<<<<<<< HEAD
-  "date": "2026-10-02",
-  "temperature_mean_c": 27.2,
-  "temperature_max_c": 32.3,
-  "temperature_min_c": 23.0,
-  "relative_humidity_percent": 59.0,
-  "precipitation_mm_day": 0.2,
-  "wind_speed_m_s": 4.12,
-  "solar_radiation_kwh_m2_day": 6.3667,
-  "source": "Open-Meteo",
-  "data_type": "forecast"
-}
-```
-
-### 5. Soil Properties: `GET /api/soil?lat=16.7050&lon=74.2433`
-```json
-{
-  "source": "OpenLandMap",
-  "status": "available",
-  "properties": {
-    "soil_ph": { "value": 68.0, "raw_value": 68.0, "unit": "dataset scale; verify before display", "depth": "surface band b0", "source": "OpenLandMap", "resolution_m": 250 },
-    "soil_organic_carbon": { "value": 2.0, "raw_value": 2.0, "unit": "dataset scale; verify before display", "depth": "surface band b0", "source": "OpenLandMap", "resolution_m": 250 },
-    "clay_content": { "value": 44.0, "raw_value": 44.0, "unit": "dataset scale; verify before display", "depth": "surface band b0", "source": "OpenLandMap", "resolution_m": 250 }
-  },
-  "model_input": false,
-  "notice": "Mapped soil context only. These properties are not inputs to the current irrigation prediction models."
-}
-```
-
-### 6. Prediction: `POST /predict`
-#### Request Payload:
-```json
-{
-  "latitude": 16.7050,
-=======
   "latitude": 16.705,
->>>>>>> d3fc4ccb213c2e4ba1c51f6125d8a173087e77d3
   "longitude": 74.2433,
   "planting_date": "2026-06-15",
   "prediction_date": "2026-10-02",
@@ -440,109 +802,140 @@ After a production build, the backend serves `frontend/dist` when present.
 }
 ```
 
-<<<<<<< HEAD
-#### Response Payload:
-```json
-{
-  "location": {
-    "latitude": 16.705,
-    "longitude": 74.2433,
-    "name": "Kolhapur, Maharashtra"
-  },
-  "planting_date": "2026-06-15",
-  "prediction_date": "2026-10-02",
-  "crop_age_days": 109,
-  "weather": {
-    "date": "2026-10-02",
-    "temperature_mean_c": 27.2,
-    "temperature_max_c": 32.3,
-    "temperature_min_c": 23.0,
-    "relative_humidity_percent": 59.0,
-    "precipitation_mm_day": 0.2,
-    "wind_speed_m_s": 4.12,
-    "solar_radiation_kwh_m2_day": 6.3667,
-    "source": "Open-Meteo",
-    "data_type": "forecast"
-  },
-  "soil": {
-    "source": "OpenLandMap",
-    "status": "available",
-    "properties": {
-      "soil_ph": { "value": 68.0, "raw_value": 68.0, "unit": "pH" },
-      "soil_organic_carbon": { "value": 2.0, "raw_value": 2.0, "unit": "g/kg" },
-      "clay_content": { "value": 44.0, "raw_value": 44.0, "unit": "%" }
-    },
-    "model_input": false
-  },
-  "features_used": {
-    "latitude": 16.705,
-    "longitude": 74.2433,
-    "temperature_mean_c": 27.2,
-    "temperature_max_c": 32.3,
-    "temperature_min_c": 23.0,
-    "relative_humidity_percent": 59.0,
-    "precipitation_mm_day": 0.2,
-    "wind_speed_m_s": 4.12,
-    "solar_radiation_kwh_m2_day": 6.3667,
-    "sin_day_of_year": -0.999833,
-    "cos_day_of_year": 0.018277
-  },
-  "predictions": {
-    "random_forest_prediction_mm_day": 13.3708,
-    "xgboost_prediction_mm_day": 12.6373
-  },
-  "target_definition": "Simulated daily irrigation-deficit proxy",
-  "experimental_only": true,
-  "warning": "This estimate is based on a formula-generated training target and is not a validated irrigation recommendation."
-}
-```
-=======
-The response includes weather, optional soil context, the exact feature dictionary passed to the models, predictions from both models, crop age for display, and an experimental-use warning. The planting date is not passed into the model.
->>>>>>> d3fc4ccb213c2e4ba1c51f6125d8a173087e77d3
+Planting date is included for display context in the current workflow
+and does not enter the model feature vector. The response should be
+checked for weather availability, feature values, both model estimates
+and the experimental-use warning.
 
-### Legacy direct-feature request
+------------------------------------------------------------------------
 
-The API also supports supplying all 11 model features directly. This mode is intended mainly for testing and backward compatibility. Ensure the feature names and units match the table above.
+## Testing and verification
 
-## Testing
+### Backend
 
-Run the backend test suite from the repository root:
+Run from the repository root:
 
-```bash
+``` bash
 pytest -v
 ```
 
-The test suite contains 26 tests. Model-loading and inference tests require actual model binaries, not Git LFS pointer text. A successful health response alone should not be taken as proof that both models loaded; inspect the `random_forest_loaded` and `xgboost_loaded` fields.
+Model-loading and inference tests require actual model binaries, not Git
+LFS pointer text. A general health response does not by itself prove
+both models loaded. Inspect the explicit model-loaded fields and run a
+real prediction test.
 
-Frontend checks:
+### Frontend
 
-```bash
+``` bash
 cd frontend
 npm ci
 npm run build
 npm run lint
 ```
 
-## Model files and Git LFS
+### Recommended demo checklist
 
-The repository tracks model artifacts through Git LFS:
+-   Confirm the backend and frontend start successfully.
+-   Confirm actual Random Forest and XGBoost binaries load.
+-   Test a location/date with all required weather fields available.
+-   Confirm exactly 11 features are passed in the documented order.
+-   Confirm units, dates and weather source labels.
+-   Show History only if a record has actually been saved.
+-   Show soil context only after verifying the raster/API source, units,
+    scale factors, depth and NoData handling.
+-   Explain Research Lab results as saved experiments unless the page
+    demonstrably recomputes them.
+-   Do not present proxy estimates as validated irrigation advice.
 
-- `Models/random_forest.joblib` — approximately 416 MB (LFS pointer metadata reports 416,259,514 bytes).
-- `Models/xgboost.joblib` — approximately 1.48 MB (LFS pointer metadata reports 1,479,226 bytes).
+------------------------------------------------------------------------
 
-Check whether the model files were downloaded as real binaries or remain LFS pointers:
+## Limitations and responsible use
 
-```bash
-git lfs ls-files
-head -n 3 Models/random_forest.joblib
-```
+1.  **Simulated target:** the target is formula-derived, not measured
+    irrigation.
+2.  **No independent farm validation:** no measured irrigation events
+    are available to verify real-world accuracy.
+3.  **Limited agronomic variables:** soil moisture, field area, crop
+    stage, variety, root depth, irrigation efficiency and management
+    data are not current model inputs.
+4.  **Sparse soil data:** mapped soil context is incomplete and must be
+    verified before display.
+5.  **Training/live weather mismatch risk:** NASA POWER training data
+    and Open-Meteo live data need careful harmonization.
+6.  **Reproducibility:** the original training notebook and raw training
+    dataset were not present in the reviewed project snapshot; preserve
+    them with split metadata, hyperparameters, seeds and dependency
+    versions.
+7.  **Geographic coverage:** eight held-out locations are not sufficient
+    to establish accuracy across all Indian sugarcane farms.
+8.  **Model artifacts:** Git LFS pointers must not be mistaken for model
+    binaries.
+9.  **Metrics interpretation:** a high R² does not mean the same
+    percentage of real-world irrigation accuracy.
+10. **Operational use:** the application is a research prototype, not a
+    validated irrigation schedule or substitute for local agronomic
+    guidance.
 
-If `head` shows `version https://git-lfs.github.com/spec/v1`, the file is still a pointer. Retrieve the real objects with:
+------------------------------------------------------------------------
 
-```bash
-git lfs pull
-```
+## Future work
 
-Do not commit API keys, local `.env` files, virtual environments, `node_modules`, or temporary build outputs.
+Recommended next steps:
+
+1.  Preserve and document the raw dataset, target-generation code,
+    training notebook, feature schema, model versions and exact
+    train/evaluation location split.
+2.  Validate predictions against measured field irrigation or a
+    defensible, independently validated agronomic reference.
+3.  Harmonize NASA POWER training variables with Open-Meteo live
+    variables and daily aggregation.
+4.  Collect farm-level information such as field area, crop stage,
+    root-zone depth, irrigation method, soil moisture and previous
+    irrigation where appropriate.
+5.  Add soil features only through a separate experiment with verified
+    values, a scientifically appropriate target and location-held-out
+    evaluation.
+6.  Evaluate performance across more independent locations, seasons and
+    crop stages.
+7.  Consider converting depth to volume only when field area is known,
+    and account for irrigation efficiency only with a justified
+    assumption or measured data.
+8.  Involve agricultural domain experts before making practical
+    irrigation recommendations.
+
+------------------------------------------------------------------------
+
+## References
+
+-   Hargreaves, G. H., & Samani, Z. A. (1985). Reference crop
+    evapotranspiration from temperature. *Applied Engineering in
+    Agriculture*. https://doi.org/10.13031/2013.26773
+-   NASA POWER: https://power.larc.nasa.gov/
+-   Open-Meteo weather API: https://open-meteo.com/en/docs
+-   Open-Meteo historical weather API:
+    https://open-meteo.com/en/docs/historical-weather-api
+-   Open-Meteo geocoding API:
+    https://open-meteo.com/en/docs/geocoding-api
+-   ISRIC SoilGrids: https://www.isric.org/explore/soilgrids/
+-   SoilGrids documentation:
+    https://docs.isric.org/globaldata/soilgrids/
+-   OpenLandMap documentation: https://docs.openlandmap.org/
+-   OpenLandMap STAC catalogue: https://stac.openlandmap.org/
+
+------------------------------------------------------------------------
+
+## Final project summary
+
+This project demonstrates a full-stack experimental ML workflow:
+weather-based target construction, Random Forest and XGBoost regression,
+location-held-out evaluation, model interpretation experiments, a Farmer
+Dashboard, and an ML Research Lab.
+
+The reported models reproduce the simulated target closely under the
+documented evaluation setup. The scientifically appropriate conclusion
+is that the project is a useful **prototype for studying weather-based
+proxy estimation and ML analysis**. It is not yet evidence of accurate
+real-world irrigation prediction. Independent agricultural validation is
+the essential next step.
 
 
