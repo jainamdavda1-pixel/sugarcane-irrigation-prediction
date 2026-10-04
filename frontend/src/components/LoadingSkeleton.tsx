@@ -24,7 +24,7 @@ export const LoadingSkeleton: React.FC = () => {
 
       <div className="h-40 bg-slate-950 rounded-2xl border border-slate-800/80 flex items-center justify-center gap-3 text-slate-400 text-sm">
         <Loader2 className="w-5 h-5 animate-spin text-emerald-400" />
-        <span>Contacting Open-Meteo & SoilGrids & generating inference...</span>
+        <span>Contacting Open-Meteo & OpenLandMap & generating inference...</span>
       </div>
     </div>
   );

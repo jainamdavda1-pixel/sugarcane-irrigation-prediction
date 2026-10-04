@@ -20,6 +20,7 @@ interface FarmerInputFormProps {
 }
 
 const REGION_PRESETS = [
+  { name: 'Pune (MH - 250m Raster Mapped)', fullName: 'Pune, Maharashtra (OpenLandMap Sample Belt)', lat: 18.5204, lon: 73.8567 },
   { name: 'Kolhapur (MH)', fullName: 'Kolhapur, Maharashtra', lat: 16.705, lon: 74.2433 },
   { name: 'Meerut (UP)', fullName: 'Meerut, Uttar Pradesh', lat: 28.9845, lon: 77.7064 },
   { name: 'Belagavi (KA)', fullName: 'Belagavi, Karnataka', lat: 15.8497, lon: 74.4977 },
@@ -35,9 +36,9 @@ export const FarmerInputForm: React.FC<FarmerInputFormProps> = ({
   weatherLoading,
 }) => {
   // Form State
-  const [latitude, setLatitude] = useState<string>('16.7050');
-  const [longitude, setLongitude] = useState<string>('74.2433');
-  const [locationName, setLocationName] = useState<string>('Kolhapur, Maharashtra');
+  const [latitude, setLatitude] = useState<string>('18.5204');
+  const [longitude, setLongitude] = useState<string>('73.8567');
+  const [locationName, setLocationName] = useState<string>('Pune, Maharashtra (OpenLandMap Sample Belt)');
   const [plantingDate, setPlantingDate] = useState<string>('');
   const [predictionDate, setPredictionDate] = useState<string>('');
 

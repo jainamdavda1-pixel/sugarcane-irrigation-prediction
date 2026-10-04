@@ -9,8 +9,29 @@ interface SoilSummaryProps {
 
 export const SoilSummary: React.FC<SoilSummaryProps> = ({ soil }) => {
   const { t } = useLanguage();
-  const props = soil.properties || {};
-  const hasProps = soil.available && Object.keys(props).length > 0;
+  const rawProps = soil.properties || {};
+  const isAvailable = soil.available || soil.status === 'available' || soil.status === 'partial';
+
+  // Filter non-null properties
+  const validProps = Object.entries(rawProps).filter(([_, item]) => item && item.value !== undefined && item.value !== null);
+  const hasProps = isAvailable && validProps.length > 0;
+
+  const formatKeyName = (key: string, item: any): string => {
+    if (item.name) return item.name;
+    const names: Record<string, string> = {
+      soil_ph: 'Soil pH',
+      soil_organic_carbon: 'Organic Carbon',
+      clay_content: 'Clay Content',
+      phh2o: 'Soil pH (H₂O)',
+      clay: 'Clay Fraction',
+      sand: 'Sand Fraction',
+      silt: 'Silt Fraction',
+      soc: 'Soil Organic Carbon',
+      bdod: 'Bulk Density',
+      cec: 'Cation Exchange Capacity',
+    };
+    return names[key] || key.replace(/_/g, ' ').toUpperCase();
+  };
 
   return (
     <div className="bg-white border border-[#D8E4D0] rounded-3xl p-6 sm:p-7 shadow-sm space-y-4">
@@ -24,7 +45,7 @@ export const SoilSummary: React.FC<SoilSummaryProps> = ({ soil }) => {
               {t('soilTitle')}
             </h3>
             <p className="text-xs text-[#536B5C]">
-              Depth Interval: <strong className="font-mono text-[#26352B]">{soil.depth_interval}</strong> &bull; Source: {soil.source}
+              Depth Interval: <strong className="font-mono text-[#26352B]">{soil.depth_interval || '0-30cm (surface)'}</strong> &bull; Source: {soil.source}
             </p>
           </div>
         </div>
@@ -46,35 +67,36 @@ export const SoilSummary: React.FC<SoilSummaryProps> = ({ soil }) => {
         <Info className="w-4 h-4 text-[#3E7C45] shrink-0 mt-0.5" />
         <div>
           <span className="font-bold text-[#26352B]">Agronomic Context Note: </span>
-          {t('soilContextNote')}
+          {soil.notice || t('soilContextNote')}
         </div>
       </div>
 
       {/* Properties Grid */}
       {hasProps ? (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-          {Object.entries(props).map(([key, item]) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-1">
+          {validProps.map(([key, item]) => (
             <div
               key={key}
               className="p-3.5 rounded-2xl bg-[#F8F7EF] border border-[#E0EBD8] hover:border-[#C5DAC0] transition-colors"
             >
-              <div className="text-[11px] font-bold text-[#536B5C] uppercase tracking-wider truncate" title={item.name}>
-                {item.name}
+              <div className="text-[11px] font-bold text-[#536B5C] uppercase tracking-wider truncate" title={formatKeyName(key, item)}>
+                {formatKeyName(key, item)}
               </div>
               <div className="text-xl font-extrabold font-mono text-[#245C3A] mt-1">
-                {item.value} <span className="text-xs font-sans font-normal text-[#536B5C]">{item.unit}</span>
+                {typeof item.value === 'number' ? item.value.toFixed(2) : item.value}{' '}
+                <span className="text-xs font-sans font-normal text-[#536B5C]">{item.unit}</span>
               </div>
-              <div className="text-[10px] text-[#536B5C] mt-0.5 truncate" title={item.description}>
-                {item.description}
+              <div className="text-[10px] text-[#536B5C] mt-0.5 truncate" title={item.depth || item.depth_label || 'surface'}>
+                {item.depth || item.depth_label || item.description || 'surface layer'}
               </div>
             </div>
           ))}
         </div>
       ) : (
         <div className="p-6 rounded-2xl bg-[#F8F7EF] border border-dashed border-[#D8E4D0] text-center text-xs text-[#536B5C] space-y-1.5">
-          <p className="font-bold text-[#26352B]">Detailed soil information is currently unavailable for this location.</p>
+          <p className="font-bold text-[#26352B]">Supplementary soil raster tiles are not currently loaded.</p>
           <p className="text-[11px] text-[#536B5C] max-w-lg mx-auto leading-relaxed">
-            ISRIC SoilGrids REST servers were unreachable or offline raster tiles are not loaded in <code>data/soilgrids/</code>. The model prediction remains fully operational because soil parameters are not features in the current 11-feature model.
+            Local GeoTIFF files can be placed in <code>data/openlandmap/</code> (e.g. <code>soil_ph_surface.tif</code>, <code>soil_carbon_surface.tif</code>, <code>soil_clay_surface.tif</code>). The model prediction remains fully operational because soil parameters are supplementary context and not inputs to the current 11-feature model.
           </p>
         </div>
       )}

@@ -25,7 +25,7 @@ export const AboutPage: React.FC = () => {
             Sugarcane (<em>Saccharum officinarum</em>) is one of India's most water-intensive commercial cash crops, requiring between 1,500 mm to 2,500 mm of water throughout its 10 to 14 month cultivation cycle. In key cane-producing states such as Maharashtra, Uttar Pradesh, Karnataka, Tamil Nadu, Andhra Pradesh, and Gujarat, efficient water management is vital for sustainable groundwater utilization and farm profitability.
           </p>
           <p>
-            This software system demonstrates a modern machine learning pipeline where complex atmospheric evapotranspiration physics and tabular regression algorithms (Random Forest and XGBoost) are combined with live Open-Meteo weather APIs and ISRIC SoilGrids datasets, delivering instant decision-support to farmers without manual data entry.
+            This software system demonstrates a modern machine learning pipeline where complex atmospheric evapotranspiration physics and tabular regression algorithms (Random Forest and XGBoost) are combined with live Open-Meteo weather APIs and OpenLandMap mapped surface soil datasets, delivering instant decision-support to farmers without manual data entry.
           </p>
         </div>
       </div>
@@ -53,17 +53,17 @@ export const AboutPage: React.FC = () => {
           </div>
 
           <div className="p-4 rounded-2xl bg-[#F8F7EF] border border-[#D8E4D0] space-y-2">
-            <strong className="text-[#26352B] block text-sm">ISRIC SoilGrids 2.0</strong>
+            <strong className="text-[#26352B] block text-sm">OpenLandMap Soil Data</strong>
             <p className="text-[#536B5C] text-[11px] leading-relaxed">
-              Global system for digital soil mapping using automated machine learning to map soil properties at 250m resolution.
+              Open spatial data repository providing high-resolution 250m machine-learning mapped surface soil layers (pH, SOC, clay fraction).
             </p>
             <a
-              href="https://www.isric.org/explore/soilgrids"
+              href="https://openlandmap.org"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-[#245C3A] font-bold text-[11px] hover:underline"
             >
-              isric.org/soilgrids <ExternalLink className="w-3 h-3" />
+              openlandmap.org <ExternalLink className="w-3 h-3" />
             </a>
           </div>
 

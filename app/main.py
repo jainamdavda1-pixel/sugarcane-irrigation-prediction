@@ -28,7 +28,7 @@ app = FastAPI(
     title="Sugarcane Irrigation Prediction API",
     description=(
         "ML-Based Sugarcane Irrigation Requirement Prediction System with automated "
-        "Open-Meteo weather and ISRIC SoilGrids data integration."
+        "Open-Meteo weather and OpenLandMap mapped soil context integration."
     ),
     version="2.0.0",
 )
@@ -139,22 +139,33 @@ def get_weather(
         raise HTTPException(status_code=502, detail=f"Failed to retrieve weather data: {str(exc)}")
 
 
-@app.get("/soil", response_model=SoilResponse, summary="Fetch soil properties from SoilGrids (live or offline)")
+@app.get("/soil", summary="Fetch soil properties from OpenLandMap")
+@app.get("/api/soil", summary="Fetch soil properties from OpenLandMap (API prefix)")
 def get_soil(
-    latitude: float = Query(..., ge=-90.0, le=90.0, description="Latitude in decimal degrees"),
-    longitude: float = Query(..., ge=-180.0, le=180.0, description="Longitude in decimal degrees"),
+    lat: Optional[float] = Query(None, ge=-90.0, le=90.0, description="Latitude in decimal degrees"),
+    lon: Optional[float] = Query(None, ge=-180.0, le=180.0, description="Longitude in decimal degrees"),
+    latitude: Optional[float] = Query(None, ge=-90.0, le=90.0, description="Latitude in decimal degrees"),
+    longitude: Optional[float] = Query(None, ge=-180.0, le=180.0, description="Longitude in decimal degrees"),
 ):
+    actual_lat = lat if lat is not None else latitude
+    actual_lon = lon if lon is not None else longitude
+    if actual_lat is None or actual_lon is None:
+        raise HTTPException(status_code=400, detail="Missing required 'lat' (or 'latitude') and 'lon' (or 'longitude') parameters.")
     try:
-        return soil_service.get_soil_properties(latitude, longitude)
+        return soil_service.get_soil_properties(actual_lat, actual_lon)
     except Exception as exc:
         logger.error("Soil fetch failed: %s", exc)
-        return SoilResponse(
-            available=False,
-            source="SoilGrids",
-            depth_interval="0-30cm",
-            properties={},
-            message=f"Error retrieving soil properties: {str(exc)}",
-        )
+        return {
+            "source": "OpenLandMap",
+            "status": "unavailable",
+            "properties": {
+                "soil_ph": None,
+                "soil_organic_carbon": None,
+                "clay_content": None,
+            },
+            "model_input": False,
+            "notice": f"Error retrieving soil properties: {str(exc)}",
+        }
 
 
 @app.post("/predict", summary="Predict sugarcane irrigation deficit")

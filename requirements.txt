@@ -8,3 +8,4 @@ joblib
 httpx
 pytest
 pytest-asyncio
+rasterio

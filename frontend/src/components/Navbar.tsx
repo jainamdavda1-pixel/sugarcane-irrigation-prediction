@@ -25,7 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({ health, healthLoading, onRefresh
             </span>
           </h1>
           <p className="text-xs md:text-sm text-slate-400">
-            ML-driven irrigation deficit estimation with automated Open-Meteo & ISRIC SoilGrids
+            ML-driven irrigation deficit estimation with automated Open-Meteo & OpenLandMap
           </p>
         </div>
       </div>

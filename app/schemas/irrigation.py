@@ -54,19 +54,24 @@ class WeatherResponse(BaseModel):
 
 
 class SoilProperty(BaseModel):
-    name: str
-    value: Optional[float]
+    value: Optional[float] = None
+    raw_value: Optional[float] = None
     unit: str
-    depth: str = "0-30cm"
-    description: str
+    depth: str = "surface band b0"
+    source: str = "OpenLandMap"
+    resolution_m: int = 250
 
 
-class SoilResponse(BaseModel):
-    available: bool
-    source: str = "SoilGrids"
-    depth_interval: str = "0-30cm"
-    properties: Dict[str, Any] = Field(default_factory=dict)
-    message: str
+class SoilContext(BaseModel):
+    source: str = "OpenLandMap"
+    status: str = "unavailable"  # "available" | "partial" | "unavailable"
+    properties: Dict[str, Optional[SoilProperty]] = Field(default_factory=dict)
+    model_input: bool = False
+    notice: str = ""
+
+
+# Backward compatibility alias
+SoilResponse = SoilContext
 
 
 class PredictionValues(BaseModel):
@@ -80,7 +85,7 @@ class FarmerPredictionResponse(BaseModel):
     prediction_date: str
     crop_age_days: Optional[int] = None
     weather: WeatherResponse
-    soil: SoilResponse
+    soil: Dict[str, Any]
     features_used: Dict[str, float]
     predictions: PredictionValues
     target_definition: str = "Simulated daily irrigation-deficit proxy"

@@ -70,7 +70,7 @@ export function App() {
                   Sugarcane Irrigation Requirement Prediction System &bull; ML Decision Support for India
                 </span>
                 <span className="text-[11px] text-[#8B6848]">
-                  Open-Meteo & ISRIC SoilGrids Integration &bull; FastAPI + React + Vite + Tailwind CSS
+                  Open-Meteo & OpenLandMap Integration &bull; FastAPI + React + Vite + Tailwind CSS
                 </span>
               </div>
             </footer>

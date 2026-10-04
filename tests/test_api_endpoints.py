@@ -1,6 +1,6 @@
 from datetime import date
 from unittest.mock import MagicMock, patch
-from app.schemas.irrigation import SoilResponse, WeatherResponse
+from app.schemas.irrigation import WeatherResponse
 
 
 def test_health_endpoint(test_client):
@@ -63,20 +63,39 @@ def test_weather_endpoint_success(test_client):
         assert data["source"] == "Open-Meteo"
 
 
-def test_soil_endpoint_fallback(test_client):
-    mock_soil = SoilResponse(
-        available=False,
-        source="SoilGrids",
-        depth_interval="0-30cm",
-        properties={},
-        message="Soil data unavailable for this location",
-    )
-    with patch("app.services.soil_service.soil_service.get_soil_properties", return_value=mock_soil):
-        response = test_client.get("/soil?latitude=16.5&longitude=80.6")
-        assert response.status_code == 200
-        data = response.json()
-        assert data["available"] is False
-        assert data["properties"] == {}
+def test_soil_endpoint_openlandmap(test_client):
+    mock_soil = {
+        "source": "OpenLandMap",
+        "status": "available",
+        "properties": {
+            "soil_ph": {
+                "value": 7.1,
+                "raw_value": 7.1,
+                "unit": "pH",
+                "depth": "surface band b0",
+                "source": "OpenLandMap",
+                "resolution_m": 250,
+            },
+            "soil_organic_carbon": None,
+            "clay_content": None,
+        },
+        "model_input": False,
+        "notice": "Mapped soil context only.",
+    }
+    with patch("app.services.soil_service.get_soil_context", return_value=mock_soil):
+        # Test /api/soil with lat & lon
+        response1 = test_client.get("/api/soil?lat=16.705&lon=74.2433")
+        assert response1.status_code == 200
+        data1 = response1.json()
+        assert data1["source"] == "OpenLandMap"
+        assert data1["status"] == "available"
+        assert data1["properties"]["soil_ph"]["value"] == 7.1
+
+        # Test /soil with latitude & longitude
+        response2 = test_client.get("/soil?latitude=16.705&longitude=74.2433")
+        assert response2.status_code == 200
+        data2 = response2.json()
+        assert data2["source"] == "OpenLandMap"
 
 
 def test_predict_farmer_workflow_full_pipeline(test_client):
@@ -92,19 +111,20 @@ def test_predict_farmer_workflow_full_pipeline(test_client):
         source="Open-Meteo",
         data_type="forecast",
     )
-    mock_soil = SoilResponse(
-        available=True,
-        source="SoilGrids (ISRIC REST v2.0)",
-        depth_interval="0-30cm",
-        properties={
-            "phh2o": {"name": "Soil pH", "value": 6.8, "unit": "pH", "description": "Soil pH in H2O"},
-            "clay": {"name": "Clay Content", "value": 32.0, "unit": "%", "description": "Proportion of clay"},
+    mock_soil = {
+        "source": "OpenLandMap",
+        "status": "available",
+        "properties": {
+            "soil_ph": {"value": 6.8, "raw_value": 6.8, "unit": "pH", "depth": "surface band b0", "source": "OpenLandMap", "resolution_m": 250},
+            "soil_organic_carbon": None,
+            "clay_content": None,
         },
-        message="Soil properties retrieved successfully",
-    )
+        "model_input": False,
+        "notice": "Mapped soil context only.",
+    }
 
     with patch("app.services.weather_service.weather_service.get_daily_weather", return_value=mock_weather):
-        with patch("app.services.soil_service.soil_service.get_soil_properties", return_value=mock_soil):
+        with patch("app.services.soil_service.get_soil_context", return_value=mock_soil):
             payload = {
                 "latitude": 16.7050,
                 "longitude": 74.2433,
@@ -128,8 +148,7 @@ def test_predict_farmer_workflow_full_pipeline(test_client):
             assert data["weather"]["precipitation_mm_day"] == 2.0
 
             # Soil
-            assert data["soil"]["available"] is True
-            assert "phh2o" in data["soil"]["properties"]
+            assert data["soil"]["source"] == "OpenLandMap"
 
             # Predictions
             assert "random_forest_prediction_mm_day" in data["predictions"]
@@ -160,16 +179,20 @@ def test_predict_when_soil_unavailable(test_client):
         source="Open-Meteo",
         data_type="forecast",
     )
-    mock_soil = SoilResponse(
-        available=False,
-        source="SoilGrids",
-        depth_interval="0-30cm",
-        properties={},
-        message="Soil data unavailable for this location",
-    )
+    mock_soil = {
+        "source": "OpenLandMap",
+        "status": "unavailable",
+        "properties": {
+            "soil_ph": None,
+            "soil_organic_carbon": None,
+            "clay_content": None,
+        },
+        "model_input": False,
+        "notice": "Mapped soil context only.",
+    }
 
     with patch("app.services.weather_service.weather_service.get_daily_weather", return_value=mock_weather):
-        with patch("app.services.soil_service.soil_service.get_soil_properties", return_value=mock_soil):
+        with patch("app.services.soil_service.get_soil_context", return_value=mock_soil):
             payload = {
                 "latitude": 16.5,
                 "longitude": 80.6,
@@ -179,7 +202,7 @@ def test_predict_when_soil_unavailable(test_client):
             response = test_client.post("/predict", json=payload)
             assert response.status_code == 200
             data = response.json()
-            assert data["soil"]["available"] is False
+            assert data["soil"]["status"] == "unavailable"
             # Prediction still succeeds because model does not require soil
             assert data["predictions"]["random_forest_prediction_mm_day"] >= 0.0
             assert data["predictions"]["xgboost_prediction_mm_day"] >= 0.0

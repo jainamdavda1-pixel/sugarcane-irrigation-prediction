@@ -34,12 +34,36 @@ export interface SoilPropertyDetail {
   depth: string;
 }
 
-export interface SoilData {
-  available: boolean;
+export interface SoilProperty {
+  value: number;
+  raw_value: number;
+  unit: string;
+  depth: string;
   source: string;
-  depth_interval: string;
-  properties: Record<string, SoilPropertyDetail>;
-  message: string;
+  resolution_m: number;
+}
+
+export interface SoilContext {
+  source: string;
+  status: 'available' | 'partial' | 'unavailable';
+  properties: {
+    soil_ph: SoilProperty | null;
+    soil_organic_carbon: SoilProperty | null;
+    clay_content: SoilProperty | null;
+  };
+  model_input: false;
+  notice: string;
+}
+
+export interface SoilData {
+  available?: boolean;
+  status?: 'available' | 'partial' | 'unavailable';
+  source: string;
+  depth_interval?: string;
+  properties: Record<string, any>;
+  message?: string;
+  model_input?: boolean;
+  notice?: string;
 }
 
 export interface ModelPredictions {

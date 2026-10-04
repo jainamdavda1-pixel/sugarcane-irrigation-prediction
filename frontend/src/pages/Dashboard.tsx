@@ -162,7 +162,7 @@ export const Dashboard: React.FC = () => {
                   <p className="text-xs text-slate-400 leading-relaxed">
                     Select a sugarcane region or search a district on the left, then click{' '}
                     <span className="text-emerald-400 font-semibold">"Predict Irrigation Deficit"</span>.
-                    The backend will automatically pull live Open-Meteo weather parameters, ISRIC SoilGrids data, and run the Random Forest and XGBoost regression models.
+                    The backend will automatically pull live Open-Meteo weather parameters, OpenLandMap mapped soil context, and run the Random Forest and XGBoost regression models.
                   </p>
                 </div>
               </div>
@@ -172,7 +172,7 @@ export const Dashboard: React.FC = () => {
 
         {/* Footer */}
         <footer className="pt-8 pb-4 text-center text-xs text-slate-500 border-t border-slate-900">
-          Sugarcane Irrigation Requirement Prediction System &bull; Open-Meteo Forecast & Archive APIs &bull; ISRIC SoilGrids &bull; FastAPI + React + Vite + Tailwind CSS
+          Sugarcane Irrigation Requirement Prediction System &bull; Open-Meteo Forecast & Archive APIs &bull; OpenLandMap &bull; FastAPI + React + Vite + Tailwind CSS
         </footer>
       </div>
     </div>

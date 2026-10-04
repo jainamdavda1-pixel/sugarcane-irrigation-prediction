@@ -75,7 +75,7 @@ export const FarmWeatherPage: React.FC = () => {
                 My Farm & Weather Analytics
               </h1>
               <p className="text-xs sm:text-sm text-[#536B5C]">
-                Detailed meteorological conditions and ISRIC SoilGrids physical-chemical properties
+                Detailed meteorological conditions and OpenLandMap mapped surface soil properties
               </p>
             </div>
           </div>

@@ -57,14 +57,36 @@ export async function fetchWeather(
 
 export async function fetchSoil(latitude: number, longitude: number): Promise<SoilData> {
   const params = new URLSearchParams({
+    lat: latitude.toString(),
+    lon: longitude.toString(),
     latitude: latitude.toString(),
     longitude: longitude.toString(),
   });
-  const response = await fetch(getUrl(`/soil?${params.toString()}`));
+  const response = await fetch(getUrl(`/api/soil?${params.toString()}`));
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.detail || `Soil retrieval failed (HTTP ${response.status})`);
   }
+  return response.json();
+}
+
+export async function fetchSoilContext(
+  latitude: number,
+  longitude: number
+): Promise<import('../types/api').SoilContext> {
+  const params = new URLSearchParams({
+    lat: String(latitude),
+    lon: String(longitude),
+  });
+
+  const response = await fetch(
+    getUrl(`/api/soil?${params.toString()}`)
+  );
+
+  if (!response.ok) {
+    throw new Error("Soil context could not be retrieved.");
+  }
+
   return response.json();
 }
 

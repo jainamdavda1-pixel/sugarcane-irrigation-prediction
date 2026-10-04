@@ -92,7 +92,7 @@ export const DataQualityAuditSection: React.FC = () => {
                     <FileText className="w-3 h-3" /> Context Only
                   </span>
                 </td>
-                <td className="py-3 px-4 text-[#536B5C]">Excluded from model training due to 89.7% missingness; fetched live via ISRIC SoilGrids for context.</td>
+                <td className="py-3 px-4 text-[#536B5C]">Excluded from model training due to 89.7% missingness in historical tabular records; fetched via OpenLandMap 250m surface rasters for context.</td>
               </tr>
               <tr className="hover:bg-[#F8F7EF]">
                 <td className="py-3 px-4 font-semibold">Field / Agronomic Inputs</td>
@@ -129,7 +129,7 @@ export const DataQualityAuditSection: React.FC = () => {
           <AlertTriangle className="w-4 h-4 text-[#3E7C45]" /> Academic Transparency & Model Lineage
         </div>
         <p className="leading-relaxed">
-          The ML models were trained strictly on the 11 continuous features with 0% missingness. Variables with heavy missingness (SoilGrids) or complete absence (planting dates, crop variety) were purposefully excluded from the feature matrix to avoid arbitrary imputation artifacts.
+          The ML models were trained strictly on the 11 continuous features with 0% missingness. Variables with heavy missingness (soil properties) or complete absence (planting dates, crop variety) were purposefully excluded from the feature matrix to avoid arbitrary imputation artifacts.
         </p>
       </div>
     </div>

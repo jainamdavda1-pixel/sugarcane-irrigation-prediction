@@ -80,7 +80,7 @@ export const MethodologyPage: React.FC = () => {
                 <CloudSun className="w-4 h-4" />
               </div>
               <strong className="text-xs font-bold text-[#26352B] block">External APIs & Data</strong>
-              <p className="text-[11px] text-[#536B5C]">Open-Meteo Weather + ISRIC SoilGrids REST / Offline Rasters</p>
+              <p className="text-[11px] text-[#536B5C]">Open-Meteo Weather + OpenLandMap 250m Surface Rasters</p>
             </div>
 
             {/* Layer 4: ML Engines */}
@@ -94,7 +94,7 @@ export const MethodologyPage: React.FC = () => {
           </div>
 
           <div className="p-4 rounded-2xl bg-white border border-[#E0EBD8] text-xs text-[#536B5C] leading-relaxed">
-            <strong>Supplementary Context Path:</strong> Notice that soil data flows from ISRIC SoilGrids directly into the response payload for farmer advisory context, and is intentionally <strong>not routed through the 11-feature ML tensor</strong> to preserve model weight validity.
+            <strong>Supplementary Context Path:</strong> Notice that soil data flows from OpenLandMap surface rasters directly into the response payload for farmer advisory context, and is intentionally <strong>not routed through the 11-feature ML tensor</strong> to preserve model weight validity.
           </div>
         </div>
       </div>
@@ -186,7 +186,7 @@ export const MethodologyPage: React.FC = () => {
           </div>
           <div className="p-3.5 rounded-2xl bg-[#F8F7EF] border border-[#E0EBD8]">
             <strong className="text-[#245C3A] block mb-1">2. Soil Hydrological Modeling</strong>
-            Train future model iterations with SoilGrids available water capacity (AWC) and root-zone depth.
+            Train future model iterations with OpenLandMap available water capacity (AWC) and root-zone depth.
           </div>
           <div className="p-3.5 rounded-2xl bg-[#F8F7EF] border border-[#E0EBD8]">
             <strong className="text-[#245C3A] block mb-1">3. Field Sensor Calibration</strong>

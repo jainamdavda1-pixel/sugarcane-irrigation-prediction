@@ -12,15 +12,15 @@ if not MODELS_DIR.exists():
 RF_MODEL_PATH = MODELS_DIR / "random_forest.joblib"
 XGB_MODEL_PATH = MODELS_DIR / "xgboost.joblib"
 
-# Soil raster directory
-SOIL_DATA_DIR = BASE_DIR / "data" / "soilgrids"
+# Data directories
+DATA_DIR = BASE_DIR / "data"
+OPENLANDMAP_DIR = DATA_DIR / "openlandmap"
+SOIL_DATA_DIR = OPENLANDMAP_DIR
 
 # API Endpoints
 OPEN_METEO_FORECAST_URL = os.getenv("OPEN_METEO_FORECAST_URL", "https://api.open-meteo.com/v1/forecast")
 OPEN_METEO_ARCHIVE_URL = os.getenv("OPEN_METEO_ARCHIVE_URL", "https://archive-api.open-meteo.com/v1/archive")
 OPEN_METEO_GEOCODING_URL = os.getenv("OPEN_METEO_GEOCODING_URL", "https://geocoding-api.open-meteo.com/v1/search")
-
-SOILGRIDS_REST_URL = os.getenv("SOILGRIDS_REST_URL", "https://rest.isric.org/soilgrids/v2.0/properties/query")
 
 # HTTP settings
 HTTP_TIMEOUT_SECONDS = float(os.getenv("HTTP_TIMEOUT_SECONDS", "8.0"))

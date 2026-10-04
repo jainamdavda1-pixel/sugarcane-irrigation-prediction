@@ -1,6 +1,6 @@
 # ML-Based Sugarcane Irrigation Requirement Prediction System for India
 
-An integrated machine learning system for predicting a **simulated daily irrigation-deficit proxy (mm/day)** for sugarcane crops across India. This system eliminates manual weather parameter entry for farmers by automatically pulling real-time, forecast, and historical weather data via **Open-Meteo**, and querying soil physical-chemical properties via **ISRIC SoilGrids**.
+An integrated machine learning system for predicting a **simulated daily irrigation-deficit proxy (mm/day)** for sugarcane crops across India. This system eliminates manual weather parameter entry for farmers by automatically pulling real-time, forecast, and historical weather data via **Open-Meteo**, and querying high-resolution 250m surface soil properties via **OpenLandMap**.
 
 ---
 
@@ -11,7 +11,7 @@ An integrated machine learning system for predicting a **simulated daily irrigat
 3. **Prediction Date**: Defaults to today (or any date within the 16-day forecast horizon or past historical records).
 4. **Automated Weather & Soil Fetching**:
    - **Open-Meteo API**: Automatically fetches daily mean/min/max temperature, relative humidity, precipitation, wind speed, and shortwave solar radiation (converted from MJ/m² to kWh/m²/day).
-   - **ISRIC SoilGrids**: Queries bulk density, pH, clay %, sand %, silt %, organic carbon, and CEC. If live ISRIC servers are unreachable, it falls back to local offline rasters or gracefully marks soil context as unavailable without failing the prediction.
+   - **OpenLandMap 250m Rasters**: Samples all-India surface soil pH, organic carbon (SOC), and clay fraction from GeoTIFF rasters with zero external network dependency.
 5. **Exact Feature Engineering**: Reconstructs the exact 11 training features including cyclical `sin_day_of_year` and `cos_day_of_year`.
 6. **Dual-Model Inference**: Evaluates the input using pre-trained **Random Forest Regressor** and **XGBoost Regressor** pipelines (`.joblib` models).
 7. **Interactive Dashboard**: Displays predictions, weather breakdown, soil properties, and experimental-estimate disclaimers.
@@ -140,14 +140,18 @@ Returns master dataset metadata, split details, and baseline metrics from `exper
 }
 ```
 
-### 5. Soil Properties: `GET /soil?latitude=16.7050&longitude=74.2433`
+### 5. Soil Properties: `GET /api/soil?lat=16.7050&lon=74.2433`
 ```json
 {
-  "available": false,
-  "source": "SoilGrids",
-  "depth_interval": "0-30cm",
-  "properties": {},
-  "message": "Soil data unavailable for this location (ISRIC live endpoint unreachable and offline SoilGrids rasters not downloaded)."
+  "source": "OpenLandMap",
+  "status": "available",
+  "properties": {
+    "soil_ph": { "value": 68.0, "raw_value": 68.0, "unit": "dataset scale; verify before display", "depth": "surface band b0", "source": "OpenLandMap", "resolution_m": 250 },
+    "soil_organic_carbon": { "value": 2.0, "raw_value": 2.0, "unit": "dataset scale; verify before display", "depth": "surface band b0", "source": "OpenLandMap", "resolution_m": 250 },
+    "clay_content": { "value": 44.0, "raw_value": 44.0, "unit": "dataset scale; verify before display", "depth": "surface band b0", "source": "OpenLandMap", "resolution_m": 250 }
+  },
+  "model_input": false,
+  "notice": "Mapped soil context only. These properties are not inputs to the current irrigation prediction models."
 }
 ```
 
@@ -187,11 +191,14 @@ Returns master dataset metadata, split details, and baseline metrics from `exper
     "data_type": "forecast"
   },
   "soil": {
-    "available": false,
-    "source": "SoilGrids",
-    "depth_interval": "0-30cm",
-    "properties": {},
-    "message": "Soil data unavailable for this location."
+    "source": "OpenLandMap",
+    "status": "available",
+    "properties": {
+      "soil_ph": { "value": 68.0, "raw_value": 68.0, "unit": "pH" },
+      "soil_organic_carbon": { "value": 2.0, "raw_value": 2.0, "unit": "g/kg" },
+      "clay_content": { "value": 44.0, "raw_value": 44.0, "unit": "%" }
+    },
+    "model_input": false
   },
   "features_used": {
     "latitude": 16.705,
