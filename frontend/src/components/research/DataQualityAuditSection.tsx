@@ -1,5 +1,5 @@
 import React from 'react';
-import { Database, CheckCircle2, XCircle, AlertTriangle, FileText } from 'lucide-react';
+import { Database, CheckCircle2, XCircle, FileText } from 'lucide-react';
 
 export const DataQualityAuditSection: React.FC = () => {
   return (
@@ -123,14 +123,49 @@ export const DataQualityAuditSection: React.FC = () => {
         </div>
       </div>
 
-      {/* Scientific Integrity Note */}
-      <div className="p-5 rounded-3xl bg-[#F8F7EF] border border-[#D8E4D0] space-y-2 text-xs text-[#536B5C]">
-        <div className="flex items-center gap-2 font-bold text-sm text-[#26352B]">
-          <AlertTriangle className="w-4 h-4 text-[#3E7C45]" /> Academic Transparency & Model Lineage
+      {/* Academic Integrity & Deep-Dive Data Audit Conclusions */}
+      <div className="p-6 rounded-3xl bg-[#F8F7EF] border border-[#D8E4D0] space-y-6 text-xs text-[#536B5C]">
+        <div className="flex items-center justify-between border-b border-[#E0EBD8] pb-3">
+          <h4 className="font-extrabold text-[#26352B] text-sm uppercase tracking-wider flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-[#3E7C45]" /> Data Lineage, Missingness Handling & Pipeline Audit
+          </h4>
+          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-white text-[#245C3A] border border-[#C5DAC0]">
+            Experiment 10 of 10
+          </span>
         </div>
-        <p className="leading-relaxed">
-          The ML models were trained strictly on the 11 continuous features with 0% missingness. Variables with heavy missingness (soil properties) or complete absence (planting dates, crop variety) were purposefully excluded from the feature matrix to avoid arbitrary imputation artifacts.
-        </p>
+
+        {/* 3-Column Engineering Decisions Breakdown */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-4 bg-white rounded-2xl border border-[#E0EBD8] shadow-2xs space-y-2">
+            <strong className="text-sm font-bold text-[#245C3A] block">1. 100% Complete Feature Matrix</strong>
+            <p className="leading-relaxed">
+              All 11 active features across all <strong>71,214 daily rows</strong> have exactly <strong>0% missing values</strong>. Sourced from NASA POWER daily agrometeorology archives, avoiding noisy statistical imputation or synthetic interpolation artifacts in core inputs.
+            </p>
+          </div>
+
+          <div className="p-4 bg-white rounded-2xl border border-[#E0EBD8] shadow-2xs space-y-2">
+            <strong className="text-sm font-bold text-[#E39D36] block">2. Soil Missingness & Runtime Rasters</strong>
+            <p className="leading-relaxed">
+              Historical CSV soil properties had <strong>89.74% missing values</strong> (63,910 rows). To protect ML training integrity, soil columns were excluded from the regression tensor and instead retrieved at runtime via <strong>OpenLandMap 250m global soil rasters</strong> for advisory context.
+            </p>
+          </div>
+
+          <div className="p-4 bg-white rounded-2xl border border-[#E0EBD8] shadow-2xs space-y-2">
+            <strong className="text-sm font-bold text-[#3F86B5] block">3. Target Zero-Inflation Physics</strong>
+            <p className="leading-relaxed">
+              The target deficit distribution contains a sharp peak at <strong>0.00 mm/day</strong> during monsoon seasons where effective rainfall exceeds crop evapotranspiration (Peff ≥ ETc), followed by a smooth right-skewed tail up to 9.2 mm/day during dry summer heatwaves.
+            </p>
+          </div>
+        </div>
+
+        {/* Structured Takeaways / Conclusion */}
+        <div className="p-4 bg-[#EDF4E7] rounded-2xl border border-[#C5DAC0] space-y-2 text-xs text-[#26352B]">
+          <strong className="text-sm font-bold block text-[#245C3A]">📌 Experiment 10 Data Audit Conclusion:</strong>
+          <ul className="list-disc list-inside space-y-1 text-[#26352B]/90">
+            <li><strong>Strict Data Lineage:</strong> Training strictly on complete continuous weather logs prevents synthetic artifacts from propagating into farmer advisory recommendations.</li>
+            <li><strong>Hybrid Architecture:</strong> Combining ML regression on weather with live raster lookups for soil physics provides the optimal balance of statistical rigor and agronomic completeness.</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

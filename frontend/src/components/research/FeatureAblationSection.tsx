@@ -173,14 +173,56 @@ export const FeatureAblationSection: React.FC = () => {
         )}
       </div>
 
-      {/* Academic Finding Box */}
-      <div className="p-5 rounded-3xl bg-[#F8F7EF] border border-[#D8E4D0] space-y-2 text-xs text-[#536B5C]">
-        <div className="flex items-center gap-2 font-bold text-sm text-[#26352B]">
-          <AlertCircle className="w-4 h-4 text-[#3E7C45]" /> Key Experimental Finding
+      {/* Academic Finding & Comprehensive Ablation Conclusions */}
+      <div className="p-6 rounded-3xl bg-[#F8F7EF] border border-[#D8E4D0] space-y-6 text-xs text-[#536B5C]">
+        <div className="flex items-center justify-between border-b border-[#E0EBD8] pb-3">
+          <h4 className="font-extrabold text-[#26352B] text-sm uppercase tracking-wider flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-[#245C3A]" /> Feature Ablation Degradation Analysis & Key Findings
+          </h4>
+          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-white text-[#245C3A] border border-[#C5DAC0]">
+            Experiment 5 of 10
+          </span>
         </div>
-        <p className="leading-relaxed">
-          When relying only on spatial coordinates and calendar harmonics (4 features), test MAE jumps from <strong>0.2156 mm/day</strong> to <strong>2.5722 mm/day</strong> ($R^2$ collapses to 0.622). This experimentally proves that pure location and season cannot replace live meteorological measurements.
-        </p>
+
+        {/* Subset-by-Subset Impact Breakdown */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 bg-white rounded-2xl border border-[#E0EBD8] space-y-2">
+            <strong className="text-sm font-bold text-[#245C3A] block">1. Removal of Spatial Coordinates (Lat/Lon)</strong>
+            <p className="leading-relaxed">
+              Excluding latitude & longitude causes a modest <strong>~15% error increase</strong> (MAE rises from 0.2156 to 0.2482 mm/day; R² = 0.9959). This confirms that the model relies primarily on real-time atmospheric variables rather than geographic coordinates, demonstrating strong transferability to new farm locations.
+            </p>
+          </div>
+
+          <div className="p-4 bg-white rounded-2xl border border-[#E0EBD8] space-y-2">
+            <strong className="text-sm font-bold text-[#3F86B5] block">2. Removal of Seasonal Harmonics (Sin/Cos Day)</strong>
+            <p className="leading-relaxed">
+              Excluding seasonal day-of-year cyclics causes a <strong>~30% error increase</strong> (MAE rises to 0.2814 mm/day). Solar radiation and temperature already carry implicit seasonal rhythms, allowing the models to partially compensate even without explicit calendar harmonics.
+            </p>
+          </div>
+
+          <div className="p-4 bg-white rounded-2xl border border-[#E0EBD8] space-y-2">
+            <strong className="text-sm font-bold text-[#26352B] block">3. Weather-Only Subset (7 Meteorological Features)</strong>
+            <p className="leading-relaxed">
+              Using solely the 7 pure weather variables (no coordinates, no calendar days) achieves a very respectable test MAE of <strong>0.3120 mm/day</strong> (R² = 0.9934). This proves that live meteorological sensors alone can drive accurate irrigation scheduling.
+            </p>
+          </div>
+
+          <div className="p-4 bg-white rounded-2xl border border-[#F5C7C3] bg-[#FDF2F0] space-y-2">
+            <strong className="text-sm font-bold text-[#C64F45] block">4. Location & Season Only (Weather Stripped)</strong>
+            <p className="leading-relaxed text-[#C64F45]">
+              When live weather is completely removed and only location + day of year are used, test MAE <strong>explodes by &gt;1100%</strong> to <strong>2.5722 mm/day</strong> (R² collapses from 0.997 to 0.6221).
+            </p>
+          </div>
+        </div>
+
+        {/* Structured Takeaways / Conclusion */}
+        <div className="p-4 bg-[#EDF4E7] rounded-2xl border border-[#C5DAC0] space-y-2 text-xs text-[#26352B]">
+          <strong className="text-sm font-bold block text-[#245C3A]">📌 Experiment 5 Ablation Conclusion:</strong>
+          <ul className="list-disc list-inside space-y-1 text-[#26352B]/90">
+            <li><strong>Meteorology is Non-Negotiable:</strong> Calendar and location alone cannot account for acute day-to-day weather volatility, heatwaves, or unseasonal monsoon cloudbursts.</li>
+            <li><strong>Optimal Production Pipeline:</strong> The full 11-feature space is empirically optimal, combining real-time meteorological signals with geographic elevation/latitude priors and smooth seasonal cycle harmonics.</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

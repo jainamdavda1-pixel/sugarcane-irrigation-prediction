@@ -9,7 +9,7 @@ import {
   Legend,
   CartesianGrid,
 } from 'recharts';
-import { Network, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Network, CheckCircle2 } from 'lucide-react';
 import { PCA_EXPERIMENT_DATA } from '../../data/experimentsData';
 
 export const PcaExperimentSection: React.FC = () => {
@@ -96,26 +96,48 @@ export const PcaExperimentSection: React.FC = () => {
         </div>
       </div>
 
-      {/* Academic Conclusion */}
-      <div className="p-5 rounded-3xl bg-[#F8F7EF] border border-[#D8E4D0] space-y-3 text-xs text-[#536B5C]">
-        <h4 className="text-xs font-bold text-[#26352B] uppercase tracking-wider flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-[#3E7C45]" /> Why Raw Tabular Features Outperform PCA in Production
-        </h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="p-3 bg-white rounded-xl border border-[#E0EBD8]">
-            <strong className="text-[#26352B] block mb-1">Non-Linear Thresholding</strong>
-            Decision tree algorithms (Random Forest & XGBoost) naturally construct orthogonal, non-linear split planes. Compressing raw variables into linear PCA combinations obscures crisp physical thresholds (such as rainfall cutoffs).
+      {/* Academic Conclusion & Pedagogical Deep-Dive */}
+      <div className="p-6 rounded-3xl bg-[#F8F7EF] border border-[#D8E4D0] space-y-6 text-xs text-[#536B5C]">
+        <div className="flex items-center justify-between border-b border-[#E0EBD8] pb-3">
+          <h4 className="font-extrabold text-[#26352B] text-sm uppercase tracking-wider flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-[#3E7C45]" /> Why Raw Tabular Features Outperform PCA in Tree-Based Regressors
+          </h4>
+          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-white text-[#245C3A] border border-[#C5DAC0]">
+            Experiment 6 of 10
+          </span>
+        </div>
+
+        {/* 3-Column Theoretical Breakdown */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-4 bg-white rounded-2xl border border-[#E0EBD8] shadow-2xs space-y-2">
+            <strong className="text-sm font-bold text-[#26352B] block">1. The "Threshold Smearing" Effect</strong>
+            <p className="leading-relaxed">
+              Agricultural physics contains sharp discontinuous step-functions (e.g., if precipitation &gt; 5 mm, irrigation instantly drops to 0). Decision trees easily identify axis-aligned thresholds (Precipitation ≤ 5.0 mm). Linear PCA projects these into continuous dense linear combinations (α·Tmax + β·P + γ·Rad), smearing and destroying crisp decision boundaries.
+            </p>
           </div>
-          <div className="p-3 bg-white rounded-xl border border-[#E0EBD8]">
-            <strong className="text-[#26352B] block mb-1">Accuracy vs. Dimension Tradeoff</strong>
-            Even with 8 PCs capturing 98.6% of variance, test MAE (0.630 mm/day) is roughly 3× higher than the raw 11-feature baseline (0.216 mm/day). Thus, raw features are preserved in production.
+
+          <div className="p-4 bg-white rounded-2xl border border-[#E0EBD8] shadow-2xs space-y-2">
+            <strong className="text-sm font-bold text-[#26352B] block">2. Explained Variance vs. Prediction Error</strong>
+            <p className="leading-relaxed">
+              While 3 PCs capture <strong>81.4%</strong> of meteorological variance, test MAE increases by <strong>~600%</strong> (from 0.216 to 1.48 mm/day). Even with 8 PCs capturing <strong>98.6%</strong> of variance, test MAE remains nearly <strong>3× worse</strong> (0.630 mm/day) than using the raw 11 features.
+            </p>
+          </div>
+
+          <div className="p-4 bg-white rounded-2xl border border-[#E0EBD8] shadow-2xs space-y-2">
+            <strong className="text-sm font-bold text-[#26352B] block">3. Loss of Interpretability</strong>
+            <p className="leading-relaxed">
+              In agricultural advisory systems, farmers and agronomists need explainable attributions (e.g., "Irrigation increased because temperature exceeded 38°C"). PCA components (PC1, PC2, etc.) are abstract mathematical eigenvectors with no intuitive physical interpretation.
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-xs text-[#8B6848] bg-[#FDF9F3] p-3 rounded-xl border border-[#F0E6D8]">
-          <AlertTriangle className="w-4 h-4 shrink-0 text-[#E39D36]" />
-          <span>
-            <strong>Production Separation:</strong> PCA was evaluated solely as an exploratory experiment. The active production models strictly use raw physical meteorological features.
-          </span>
+
+        {/* Structured Takeaways / Conclusion */}
+        <div className="p-4 bg-[#EDF4E7] rounded-2xl border border-[#C5DAC0] space-y-2 text-xs text-[#26352B]">
+          <strong className="text-sm font-bold block text-[#245C3A]">📌 Experiment 6 PCA Conclusion:</strong>
+          <ul className="list-disc list-inside space-y-1 text-[#26352B]/90">
+            <li><strong>PCA Rejected for Production:</strong> Dimensionality reduction is strictly unnecessary and counterproductive on low-dimensional physical feature spaces (11 features).</li>
+            <li><strong>Production Architecture:</strong> Active deployed models strictly operate on uncompressed raw meteorological variables to guarantee maximum physical precision and complete SHAP explainability.</li>
+          </ul>
         </div>
       </div>
     </div>

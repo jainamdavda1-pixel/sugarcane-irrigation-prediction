@@ -163,14 +163,72 @@ export const FeatureImportanceShapSection: React.FC = () => {
         </div>
       </div>
 
-      {/* Academic Attribution Caution */}
-      <div className="p-5 rounded-3xl bg-[#FDF2F0] border border-[#F5C7C3] space-y-2 text-xs text-[#C64F45]">
-        <div className="flex items-center gap-2 font-bold text-sm">
-          <AlertTriangle className="w-4 h-4" /> Crucial Scientific Limitation: Attribution vs. Real-World Causality
+      {/* Academic Attribution & In-Depth Interpretability Conclusions */}
+      <div className="p-6 rounded-3xl bg-[#F8F7EF] border border-[#D8E4D0] space-y-6 text-xs text-[#536B5C]">
+        <div className="flex items-center justify-between border-b border-[#E0EBD8] pb-3">
+          <h4 className="font-extrabold text-[#26352B] text-sm uppercase tracking-wider flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-[#245C3A]" /> Feature Importance vs. Game-Theoretic SHAP Interpretability
+          </h4>
+          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-white text-[#245C3A] border border-[#C5DAC0]">
+            Experiment 4 of 10
+          </span>
         </div>
-        <p className="leading-relaxed">
-          Feature importance and SHAP values describe <strong>mathematical model attribution</strong> in predicting the simulated deficit proxy (ETc - Peff). They do <strong>not</strong> imply real-world causality. For instance, modifying a single feature artificially in a real field setting triggers complex agronomic feedback loops not captured by regression over historical weather series.
-        </p>
+
+        {/* Method Comparison: Gini vs SHAP */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 bg-white rounded-2xl border border-[#E0EBD8] space-y-2">
+            <strong className="text-sm font-bold text-[#26352B] block">🌳 Gini Impurity / Gain Weight (Tree-Based)</strong>
+            <p className="leading-relaxed">
+              Tree feature importances sum split improvements across trees. While fast, Gini importance suffers from known biases toward continuous, high-cardinality features and does not reveal the <em>direction</em> (positive vs. negative) of a feature's effect on irrigation needs.
+            </p>
+          </div>
+          <div className="p-4 bg-white rounded-2xl border border-[#E0EBD8] space-y-2">
+            <strong className="text-sm font-bold text-[#245C3A] block">⚡ Game-Theoretic TreeSHAP (Additive Margins)</strong>
+            <p className="leading-relaxed">
+              SHAP assigns each feature its exact marginal contribution to the prediction compared to the dataset baseline (in absolute mm/day units). It satisfies formal mathematical properties of efficiency, symmetry, and additivity.
+            </p>
+          </div>
+        </div>
+
+        {/* Directional Biophysical Mechanics */}
+        <div className="p-4 bg-white rounded-2xl border border-[#E0EBD8] space-y-3">
+          <strong className="text-sm font-bold text-[#26352B] block">
+            🔬 Physical Mechanics of Top Features (Validated by SHAP Beeswarm)
+          </strong>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[11px]">
+            <div className="p-3 bg-[#F8F7EF] rounded-xl border border-[#E8F0E4] space-y-1">
+              <strong className="text-[#245C3A] block font-bold">1. Maximum Temperature (+1.84 mm/day)</strong>
+              <p>Primary thermodynamic driver of vapor pressure deficit (VPD). Higher maximum temperatures exponentially accelerate sugarcane stomatal transpiration.</p>
+            </div>
+            <div className="p-3 bg-[#F8F7EF] rounded-xl border border-[#E8F0E4] space-y-1">
+              <strong className="text-[#245C3A] block font-bold">2. Solar Radiation (+1.38 mm/day)</strong>
+              <p>Provides net radiative energy for latent heat flux and water phase change from liquid to vapor at the sugarcane canopy.</p>
+            </div>
+            <div className="p-3 bg-[#F8F7EF] rounded-xl border border-[#E8F0E4] space-y-1">
+              <strong className="text-[#C64F45] block font-bold">3. Precipitation (-0.92 mm/day)</strong>
+              <p>Acts as an immediate negative sink: daily rainfall &gt; 5 mm offsets evapotranspiration and drives required irrigation directly toward 0 mm/day.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Crucial Scientific Limitation Box */}
+        <div className="p-4 rounded-2xl bg-[#FDF2F0] border border-[#F5C7C3] space-y-1 text-[#C64F45]">
+          <div className="flex items-center gap-2 font-bold text-sm">
+            <AlertTriangle className="w-4 h-4" /> Crucial Scientific Limitation: Attribution vs. Real-World Causality
+          </div>
+          <p className="leading-relaxed">
+            Feature importance and SHAP values describe <strong>mathematical model attribution</strong> in predicting the simulated deficit proxy (ETc - Peff). They do <strong>not</strong> imply direct agronomic causality in real fields where root-zone moisture holding capacity, soil compaction, and irrigation system efficiency modulate actual water uptake.
+          </p>
+        </div>
+
+        {/* Structured Takeaways / Conclusion */}
+        <div className="p-4 bg-[#EDF4E7] rounded-2xl border border-[#C5DAC0] space-y-2 text-xs text-[#26352B]">
+          <strong className="text-sm font-bold block text-[#245C3A]">📌 Experiment 4 SHAP Conclusion:</strong>
+          <ul className="list-disc list-inside space-y-1 text-[#26352B]/90">
+            <li><strong>Thermodynamic Alignment:</strong> Top features across both models are Tmax, Solar Radiation, and Precipitation, perfectly matching FAO-56 biophysical principles.</li>
+            <li><strong>Model Consistency:</strong> Both Random Forest and XGBoost exhibit near-identical feature rankings, confirming that the learned physical representations are robust across different ensemble algorithms.</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

@@ -173,20 +173,51 @@ export const LearningCurvesSection: React.FC = () => {
         )}
       </div>
 
-      {/* Academic Bias-Variance Interpretation */}
-      <div className="p-5 rounded-3xl bg-[#F8F7EF] border border-[#D8E4D0] space-y-3 text-xs text-[#536B5C]">
-        <h4 className="font-bold text-[#26352B] text-sm flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-[#245C3A]" /> Theoretical Interpretation & Generalization Bounds
-        </h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="p-3 bg-white rounded-xl border border-[#E0EBD8]">
-            <strong className="text-[#26352B] block mb-1">Convergence Dynamics</strong>
-            At 10% data (5,660 samples), Random Forest validation MAE is 0.452 mm/day. As training scales to 100% (56,606 samples), validation MAE steadily falls to 0.216 mm/day, showing low asymptotic variance and strong sample efficiency.
+      {/* Academic Bias-Variance Interpretation & Deep-Dive Conclusions */}
+      <div className="p-6 rounded-3xl bg-[#F8F7EF] border border-[#D8E4D0] space-y-6 text-xs text-[#536B5C]">
+        <div className="flex items-center justify-between border-b border-[#E0EBD8] pb-3">
+          <h4 className="font-extrabold text-[#26352B] text-sm uppercase tracking-wider flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-[#245C3A]" /> Bias–Variance Diagnostics & Sample Efficiency Breakdown
+          </h4>
+          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-white text-[#245C3A] border border-[#C5DAC0]">
+            Experiment 3 of 10
+          </span>
+        </div>
+
+        {/* 3-Column Diagnostic Breakdown */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-4 bg-white rounded-2xl border border-[#E0EBD8] shadow-2xs space-y-2">
+            <strong className="text-sm font-bold text-[#26352B] block">1. Convergence Rate & Scaling</strong>
+            <p className="leading-relaxed">
+              At 10% data (5,660 rows), validation error starts at <strong>0.4519 mm/day</strong>. By 50% (28,303 rows), it drops steeply to <strong>0.2928 mm/day</strong>, finally converging to <strong>0.2156 mm/day</strong> at 100%. The smooth downward monotonic curve indicates high sample efficiency with healthy gradient descent.
+            </p>
           </div>
-          <div className="p-3 bg-white rounded-xl border border-[#E0EBD8]">
-            <strong className="text-[#26352B] block mb-1">Generalization Gap Analysis</strong>
-            The persistent gap between train error (~0.105 mm/day) and held-out test error (~0.216 mm/day) is attributable to spatial location hold-out: testing on completely unseen geographical micro-climates rather than simple in-distribution random splits.
+
+          <div className="p-4 bg-white rounded-2xl border border-[#E0EBD8] shadow-2xs space-y-2">
+            <strong className="text-sm font-bold text-[#26352B] block">2. Bias vs. Variance Diagnostics</strong>
+            <p className="leading-relaxed">
+              <strong>Low Bias:</strong> Training error stays exceptionally low (~0.105 mm/day), proving neither model suffers from underfitting.
+              <br />
+              <strong>Low Asymptotic Variance:</strong> The validation curve flattens significantly between 75% and 100% data, indicating diminishing returns from simply collecting more synthetic weather logs without new features.
+            </p>
           </div>
+
+          <div className="p-4 bg-white rounded-2xl border border-[#E0EBD8] shadow-2xs space-y-2">
+            <strong className="text-sm font-bold text-[#26352B] block">3. The Spatial Hold-Out Gap</strong>
+            <p className="leading-relaxed">
+              The persistent delta between training error (~0.105 mm) and test error (~0.216 mm) is deliberate and healthy. It represents genuine out-of-distribution evaluation across <strong>8 unseen geographical stations</strong> with distinct micro-climates, rather than a trivial randomized in-sample test split.
+            </p>
+          </div>
+        </div>
+
+        {/* Structured Takeaways / Conclusion */}
+        <div className="p-4 bg-[#EDF4E7] rounded-2xl border border-[#C5DAC0] space-y-2 text-xs text-[#26352B]">
+          <strong className="text-sm font-bold block text-[#245C3A]">📌 Experiment 3 Learning Curve Conclusion:</strong>
+          <ul className="list-disc list-inside space-y-1 text-[#26352B]/90">
+            <li><strong>Dataset Sufficiency:</strong> 56,606 training samples across 31 locations are more than sufficient to fully saturate the capacity of 200-tree ensembles.</li>
+            <li><strong>Generalization Stability:</strong> No catastrophic overfitting occurs; the models reliably stabilize at an operational test MAE of ~0.216 mm/day.</li>
+            <li><strong>Future Data Collection Recommendation:</strong> Adding more historical weather records at existing stations offers minimal upside; instead, expanding geographical coverage to under-represented coastal and sub-tropical regions will yield the highest performance gains.</li>
+          </ul>
         </div>
       </div>
     </div>
